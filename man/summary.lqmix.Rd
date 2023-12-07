@@ -7,28 +7,28 @@
 \method{summary}{lqmix}(object, ...)
 }
 \arguments{
-\item{object}{an lqmix object}
+\item{object}{an \code{lqmix} object}
 
 \item{...}{not used}
 }
 \value{
 Return an object of \code{\link{class}} \code{summary.lqmix}.
 This is a list of summary statistics for the fitted linear quantile mixture model given in \code{object}, with the following elements:
-\item{fix}{a matrix with estimates, standard errors, Z statistics, and pvalues for the fixed regression coefficients}
-\item{ranTC}{a matrix with estimates, standard errors, Z statistics, and pvalues for the TC random coefficients (if present)}
-\item{ranTV}{a matrix with estimates, standard errors, Z statistics, and pvalues for the TV random coefficients (if present)}
+\item{fix}{a matrix with estimates, standard errors, Z statistics, and p-values for the fixed regression coefficients}
+\item{ranTC}{a matrix with estimates, standard errors, Z statistics, and p-values for the TC random coefficients (if present)}
+\item{ranTV}{a matrix with estimates, standard errors, Z statistics, and p-values for the TV random coefficients (if present)}
 \item{pg}{a matrix with estimates and standard errors for the prior probabilities of the finite mixture associated to TC random coefficients (if present)}
 \item{delta}{a matrix with estimates and standard errors for the initial probabilities of the hidden Markov chain associated to TV random coefficients (if present)}
 \item{Gamma}{a matrix with estimates and standard errors for the transition probabilities of the hidden Markov chain associated to TV random coefficients (if present)}
 \item{scale}{the scale parameter}
 \item{sigma.e}{the standard deviation of error terms}
-\item{lk}{the log-likelihood}
+\item{logLik}{the log-likelihood at convergence of the EM algorithm}
 \item{npar}{the total number of model parameters}
-\item{aic}{the AIC value}
-\item{bic}{the BIC value}
+\item{AIC}{the AIC value}
+\item{BIC}{the BIC value}
 \item{qtl}{the estimated quantile}
-\item{G}{the number of mixture components (if TC random coefficients are present)}
-\item{m}{the number of hidden states (if TV random coefficients are present)}
+\item{G}{the number of mixture components associated to TC random coefficients (if present)}
+\item{m}{the number of hidden states associated to TV random coefficients (if present)}
 \item{nsbj}{the number of subjects}
 \item{nobs}{the total number of observations}
 \item{miss}{the missingness type}
@@ -36,5 +36,5 @@ This is a list of summary statistics for the fitted linear quantile mixture mode
 \item{call}{the matched call}
 }
 \description{
-Summary method for the class \code{lqmix}.
+Summary method for the \code{\link{class}} \code{lqmix}
 }

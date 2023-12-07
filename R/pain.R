@@ -1,6 +1,6 @@
 #' Pain Data
 #'
-#' The pain data frame is made by a total of 357 rows and 4 columns providing information on pain of 83 women in labor followed for a maximum of 6 measurement occasions.
+#' The pain data frame is made by a total of 357 rows and 4 columns providing information on pain of 83 women in labor followed for a maximum of 6 measurement occasions
 #'
 #' @docType data
 #'

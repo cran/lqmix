@@ -1,5 +1,5 @@
 lqmixTCTV.fit = function(y, x.fixed, namesFix, x.randomTC,x.randomTV, namesRanTC, namesRanTV, sbj.obs, time.obs, observed, m,G, qtl, n, T, Ti, nObs,
-                         order.time, ranInt, ranSlopeTC,ranSlopeTV, fixed, start,eps, maxit, parInit, verbose=TRUE){
+                         order.time, ranInt, ranSlopeTC,ranSlopeTV, fixed, start,eps, maxit, parInit, verbose=TRUE,seed=NULL){
 
 
   # initial settings
@@ -65,6 +65,8 @@ lqmixTCTV.fit = function(y, x.fixed, namesFix, x.randomTC,x.randomTV, namesRanTC
     pg = rep(1/G, G)
 
   }else if(start == 1){
+    if(!is.null(seed)) set.seed(seed)
+
     betarTC = matrix(sapply(mod0TC$coef[1:prTC], function(xx){sort(xx + rnorm(G,0,1))}), nrow = G)
     colnames(betarTC) = namesRanTC
 
@@ -250,8 +252,8 @@ lqmixTCTV.fit = function(y, x.fixed, namesFix, x.randomTC,x.randomTV, namesRanTC
   res$sigma.e = sigmaErr
   res$lk = lk
   res$npar = npar
-  res$aic = aic
-  res$bic = bic
+  res$AIC = aic
+  res$BIC = bic
   res$qtl = qtl
   res$m = m
   res$G = G

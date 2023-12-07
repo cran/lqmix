@@ -1,9 +1,9 @@
-#' Print the Summary of an \code{lqr} Object
+#' Print the Summary of an \code{lqr} object
 #'
 #' Print the summary of an an object of \code{\link{class}} \code{lqr}
 #'
 #' @param x a summary of an \code{lqr} object
-#' @param digits a non-null value for digits specifies the minimum number of significant digits to be printed
+#' @param digits a non-null value for digits specifying the minimum number of significant digits to be printed
 #' @param ... not used
 #'
 #' @return Return a summary of an \code{lqr} object

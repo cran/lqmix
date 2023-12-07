@@ -6,6 +6,9 @@
 #' @param qtl skewness parameter
 #'
 #' @return Return the variance of Asymmetric Laplace random variables for given scale (\code{sigma}) and skewness (\code{qtl}) parameters
+#'
+#' @export
+
 
 varAL = function (sigma, qtl){
   eps <- .Machine$double.eps^(2/3)

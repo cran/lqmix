@@ -2,14 +2,14 @@
 % Please edit documentation in R/print.lqmix.R
 \name{print.lqmix}
 \alias{print.lqmix}
-\title{Print an \code{lqmix} Object}
+\title{Print an \code{lqmix} object}
 \usage{
 \method{print}{lqmix}(x, digits = max(3, getOption("digits") - 3), ...)
 }
 \arguments{
 \item{x}{an \code{lqmix} object}
 
-\item{digits}{a non-null value for digits specifies the mininum number of significant digits to be printed}
+\item{digits}{a non-null value for digits specifying the minimum number of significant digits to be printed}
 
 \item{...}{not used}
 }

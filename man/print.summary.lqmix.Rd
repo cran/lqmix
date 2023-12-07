@@ -2,7 +2,7 @@
 % Please edit documentation in R/print.summary.lqmix.R
 \name{print.summary.lqmix}
 \alias{print.summary.lqmix}
-\title{Print the Summary of an \code{lqmix} Object}
+\title{Print the Summary of an \code{lqmix} object}
 \usage{
 \method{print}{summary.lqmix}(x, digits = max(3, getOption("digits") - 3),
   ...)
@@ -10,7 +10,7 @@
 \arguments{
 \item{x}{a summary of an \code{lqmix} object}
 
-\item{digits}{a non-null value for digits specifies the minimum number of significant digits to be printed}
+\item{digits}{a non-null value for digits specifying the minimum number of significant digits to be printed}
 
 \item{...}{not used}
 }

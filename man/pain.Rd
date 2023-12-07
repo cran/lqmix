@@ -18,7 +18,7 @@ A data frame with 357 observations on the following 5 variables:
 data(pain)
 }
 \description{
-The pain data frame is made by a total of 357 rows and 4 columns providing information on pain of 83 women in labor followed for a maximum of 6 measurement occasions.
+The pain data frame is made by a total of 357 rows and 4 columns providing information on pain of 83 women in labor followed for a maximum of 6 measurement occasions
 }
 \details{
 The data set consists of repeated measurements of self-reported pain on n = 83 women.

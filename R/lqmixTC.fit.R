@@ -1,5 +1,5 @@
 lqmixTC.fit = function(y, x.fixed, namesFix, x.random, namesRan, id, G, qtl, n, T, Ti, nObs,
-                       order.time, ranInt, ranSlope, fixed, start,eps, maxit, parInit, verbose=TRUE){
+                       order.time, ranInt, ranSlope, fixed, start,eps, maxit, parInit, verbose=TRUE,seed=NULL,parallel){
 
 
   # initial settings
@@ -43,7 +43,7 @@ lqmixTC.fit = function(y, x.fixed, namesFix, x.random, namesRan, id, G, qtl, n, 
     pg = rep(1/G, G)
 
   }else if(start == 1){
-
+    if(!is.null(seed)) set.seed(seed)
     # random start for parameters related to latent variables
     betar = sapply(mod0$coefficients[1:pr], function(xx){sort(xx + rnorm(G,0,1))})
     colnames(betar) = namesRan
@@ -183,8 +183,8 @@ lqmixTC.fit = function(y, x.fixed, namesFix, x.random, namesRan, id, G, qtl, n, 
   res$sigma.e = sigmaErr
   res$lk = lk
   res$npar = npar
-  res$aic = aic
-  res$bic = bic
+  res$AIC = aic
+  res$BIC = bic
   res$qtl = qtl
   res$G = G
   res$nsbjs = n

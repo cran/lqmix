@@ -2,7 +2,7 @@
 % Please edit documentation in R/print.search_lqmix.R
 \name{print.search_lqmix}
 \alias{print.search_lqmix}
-\title{Print a \code{search_lqmix} Object}
+\title{Print a \code{search_lqmix} object}
 \usage{
 \method{print}{search_lqmix}(x, digits = max(3, getOption("digits") - 3),
   ...)
@@ -10,7 +10,7 @@
 \arguments{
 \item{x}{a \code{search_lqmix} object}
 
-\item{digits}{a non-null value for digits specifies the minimum number of significant digits to be printed}
+\item{digits}{a non-null value for digits specifying the minimum number of significant digits to be printed}
 
 \item{...}{not used}
 }

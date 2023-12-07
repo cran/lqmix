@@ -1,10 +1,10 @@
-#' Print an \code{lqr} Object
+#' Print an \code{lqr} object
 #'
 #' Print an object of \code{\link{class}} \code{lqr}
 #'
 #'
 #' @param x an \code{lqr} object
-#' @param digits a non-null value for digits specifies the mininum number of significant digits to be printed
+#' @param digits a non-null value for digits specifying the minimum number of significant digits to be printed
 #' @param ... not used
 #'
 #' @return Return an \code{lqr} object
@@ -14,7 +14,6 @@
 
 
 print.lqr = function(x, digits = max(3, getOption("digits") -3), ...){
-
   cat("Linear quantile regression model fit by ML at qtl=", x$qtl, "\n")
   cat("*******************************************************", "\n")
 

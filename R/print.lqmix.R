@@ -1,10 +1,9 @@
-#' Print an \code{lqmix} Object
+#' Print an \code{lqmix} object
 #'
 #' Print an object of \code{\link{class}} \code{lqmix}
 #'
-#'
 #' @param x an \code{lqmix} object
-#' @param digits a non-null value for digits specifies the mininum number of significant digits to be printed
+#' @param digits a non-null value for digits specifying the minimum number of significant digits to be printed
 #' @param ... not used
 #'
 #' @return Return an \code{lqmix} object
@@ -16,29 +15,29 @@ print.lqmix = function(x, digits = max(3, getOption("digits") -3), ...){
 
   if(!is.null(x$call)){
     if(x$model == "TC"){
-      cat(paste("Model: TC random coefficients with G=", x$G, " at qtl=", x$q, sep=""))
+      cat(paste("Model: TC random coefficients with G=", x$G, " at qtl=", x$qtl, sep=""))
       cat("\n")
       cat("******************************************************", "\n")
     }else if(x$model == "TV"){
-      cat(paste("Model: TV random coefficients with m=", x$m, " at qtl=", x$q, sep=""))
+      cat(paste("Model: TV random coefficients with m=", x$m, " at qtl=", x$qtl, sep=""))
       cat("\n")
       cat("******************************************************", "\n")
     }else{
-      cat(paste("Model: TC and TV random coefficients with m=", x$m, " and G=", x$G, " at qtl=", x$q, sep=""))
+      cat(paste("Model: TC and TV random coefficients with m=", x$m, " and G=", x$G, " at qtl=", x$qtl, sep=""))
       cat("\n")
       cat("******************************************************************", "\n")
     }
   }else{
     if(x$model == "TC"){
-      cat(paste("Opt model: TC random coefficients with G=", x$G, " at qtl=", x$q, sep=""))
+      cat(paste("Opt model: TC random coefficients with G=", x$G, " at qtl=", x$qtl, sep=""))
       cat("\n")
       cat("********************************************************", "\n")
     }else if(x$model == "TV"){
-      cat(paste("Opt model: TV random coefficients with m=", x$m, " at qtl=", x$q, sep=""))
+      cat(paste("Opt model: TV random coefficients with m=", x$m, " at qtl=", x$qtl, sep=""))
       cat("\n")
       cat("**********************************************************", "\n")
     }else{
-      cat(paste("Opt model: TC and TV random coefficients with m=", x$m, " and G=", x$G, " at qtl=", x$q, sep=""))
+      cat(paste("Opt model: TC and TV random coefficients with m=", x$m, " and G=", x$G, " at qtl=", x$qtl, sep=""))
       cat("\n")
       cat("*********************************************************************", "\n")
     }
@@ -89,9 +88,6 @@ print.lqmix = function(x, digits = max(3, getOption("digits") -3), ...){
     cat("\nMixture probabilities:\n")
     names(x$pg) = paste("Comp", 1:nrow(x$betarTC), sep="")
     print(round(x$pg, digits))
-
-    # cat("\nStandard deviation of TC random coefficients:\n")
-    # print(round(x$sigma.b, digits))
 
   }else{ # TV
     cat("\nTime-Varying Random Coefficients:\n")

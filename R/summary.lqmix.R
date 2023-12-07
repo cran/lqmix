@@ -1,28 +1,28 @@
 #' Summary of an \code{lqmix} Object
 #'
-#' Summary method for the class \code{lqmix}.
+#' Summary method for the \code{\link{class}} \code{lqmix}
 #'
 #'
-#' @param object an lqmix object
+#' @param object an \code{lqmix} object
 #' @param ... not used
 #'
 #' @return Return an object of \code{\link{class}} \code{summary.lqmix}.
 #' This is a list of summary statistics for the fitted linear quantile mixture model given in \code{object}, with the following elements:
-#' \item{fix}{a matrix with estimates, standard errors, Z statistics, and pvalues for the fixed regression coefficients}
-#' \item{ranTC}{a matrix with estimates, standard errors, Z statistics, and pvalues for the TC random coefficients (if present)}
-#' \item{ranTV}{a matrix with estimates, standard errors, Z statistics, and pvalues for the TV random coefficients (if present)}
+#' \item{fix}{a matrix with estimates, standard errors, Z statistics, and p-values for the fixed regression coefficients}
+#' \item{ranTC}{a matrix with estimates, standard errors, Z statistics, and p-values for the TC random coefficients (if present)}
+#' \item{ranTV}{a matrix with estimates, standard errors, Z statistics, and p-values for the TV random coefficients (if present)}
 #' \item{pg}{a matrix with estimates and standard errors for the prior probabilities of the finite mixture associated to TC random coefficients (if present)}
 #' \item{delta}{a matrix with estimates and standard errors for the initial probabilities of the hidden Markov chain associated to TV random coefficients (if present)}
 #' \item{Gamma}{a matrix with estimates and standard errors for the transition probabilities of the hidden Markov chain associated to TV random coefficients (if present)}
 #' \item{scale}{the scale parameter}
 #' \item{sigma.e}{the standard deviation of error terms}
-#' \item{lk}{the log-likelihood}
+#' \item{logLik}{the log-likelihood at convergence of the EM algorithm}
 #' \item{npar}{the total number of model parameters}
-#' \item{aic}{the AIC value}
-#' \item{bic}{the BIC value}
+#' \item{AIC}{the AIC value}
+#' \item{BIC}{the BIC value}
 #' \item{qtl}{the estimated quantile}
-#' \item{G}{the number of mixture components (if TC random coefficients are present)}
-#' \item{m}{the number of hidden states (if TV random coefficients are present)}
+#' \item{G}{the number of mixture components associated to TC random coefficients (if present)}
+#' \item{m}{the number of hidden states associated to TV random coefficients (if present)}
 #' \item{nsbj}{the number of subjects}
 #' \item{nobs}{the total number of observations}
 #' \item{miss}{the missingness type}
@@ -34,7 +34,7 @@
 summary.lqmix = function(object, ...){
 
   if(any(!is.null(c(object$se.betaf, object$se.betarTC, object$se.betarTV)))){
-    names = c("Estimate", "Std.Error", "z.value", "P(>|z|)")
+    names = c("Estimate", "St.Error", "z.value", "P(>|z|)")
 
     if(!is.null(object$betaf)){
       est = c(object$betaf)
@@ -43,7 +43,7 @@ summary.lqmix = function(object, ...){
       pvalf = c(1.96*pnorm(-abs(zvalf)))
 
       tabf = cbind(Estimate = est,
-                   StdErr = sef,
+                   St.Err = sef,
                    t.value = zvalf,
                    p.value = pvalf)
       colnames(tabf) = names
@@ -59,7 +59,7 @@ summary.lqmix = function(object, ...){
       pvalTC = c(1.96*pnorm(-abs(zvalTC)))
 
       tabTC = cbind(Estimate = est,
-                   Std.Err = seTC,
+                   St.Err = seTC,
                    z.value = zvalTC,
                    p.value = pvalTC)
       colnames(tabTC) = names
@@ -73,7 +73,7 @@ summary.lqmix = function(object, ...){
       pvalTV = c(1.96*pnorm(-abs(zvalTV)))
 
       tabTV = cbind(Estimate = est,
-                    Std.Err = seTV,
+                    St.Err = seTV,
                     z.value = zvalTV,
                     p.value = pvalTV)
       colnames(tabTV) = names
@@ -99,7 +99,7 @@ summary.lqmix = function(object, ...){
       pvalTC = c(1.96*pnorm(-abs(zvalTC)))
 
       tabTC = cbind(Estimate = est,
-                    Std.Err = seTC,
+                    St.Err = seTC,
                     z.value = zvalTC,
                     p.value = pvalTC)
 
@@ -122,7 +122,7 @@ summary.lqmix = function(object, ...){
       pvalTV = c(1.96*pnorm(-abs(zvalTV)))
 
       tabTV = cbind(Estimate = estTV,
-                    Std.Err = seTV,
+                    St.Err = seTV,
                     z.value = zvalTV,
                     p.value = pvalTV)
 
@@ -153,6 +153,7 @@ summary.lqmix = function(object, ...){
     bic = object$bic
     if(object$model == "TC") G = object$G else G = NULL
     m = object$m
+    G = object$G
     npar = object$npar
 
     res = list()
@@ -182,12 +183,12 @@ summary.lqmix = function(object, ...){
     res$model = mod
     if(!is.null(object$call)) res$call = match.call()
 
-
     class(res) = "summary.lqmix"
     return(res)
 
   }else{
     print(object)
+    cat("\n")
     message("Model inference not allowed: standard errors have not been computed.")
   }
 }

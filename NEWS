@@ -1,0 +1,22 @@
+Changes in lqmm
+
+=============================================
+
+Version 1.0 (February 20, 2023)
+*********************************************
+
+- Package lqmix on CRAN
+
+=============================================
+
+Version 1.0 (Nov 9, 2023)
+*********************************************
+
+- Substituted old (separate) functions for estimating linear quantile mixtures with TC and/or TV random coefficient with a (single) new function for allowing to estimate any of them
+- Amended the search_model() function
+- Amended the specification of the TC and/or TV model formula(s)
+- Allowed for parallel computing for standard errors compution
+- Added methods
+- Improved documentation
+
+=============================================

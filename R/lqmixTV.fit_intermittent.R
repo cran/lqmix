@@ -1,5 +1,5 @@
 lqmixTV.fit = function(y, x.fixed, namesFix, x.random, namesRan, sbj.obs, time.obs, observed, m, qtl, n, T, Ti, nObs,
-                       order.time, ranInt, ranSlope, fixed, start,eps, maxit, parInit, verbose=TRUE){
+                       order.time, ranInt, ranSlope, fixed, start,eps, maxit, parInit, verbose=TRUE,seed=NULL){
 
 
   # initial settings
@@ -47,6 +47,7 @@ lqmixTV.fit = function(y, x.fixed, namesFix, x.random, namesRan, sbj.obs, time.o
 
 
   }else if(start == 1){
+    if(!is.null(seed)) set.seed(seed)
 
     # random start for parameters related to latent variables
     betar = sapply(mod0$coefficients[1:pr], function(xx){sort(xx + rnorm(m,0,1))})
@@ -131,7 +132,6 @@ lqmixTV.fit = function(y, x.fixed, namesFix, x.random, namesRan, sbj.obs, time.o
 
     # M-step
     # ******
-
     delta = colMeans(uSingle[time.obs == 1, ])
 
     num = apply(uCouple, c(2,3), sum, na.rm = T)
@@ -147,7 +147,7 @@ lqmixTV.fit = function(y, x.fixed, namesFix, x.random, namesRan, sbj.obs, time.o
     if(!is.null(betaf)) Xbeta = matrix(x.fixed %*% betaf, nObs, m) else Xbeta=0
 
     yh2 = matrix(yh - c(Xbeta), nObs, m)
-    for (h in 1:m){
+    for(h in 1:m){
       mod = suppressWarnings(rq(c(yh2[,h]) ~ .-1, weights = uSingle[,h], tau = qtl, data = data.frame(x.random)))
       betar[h,] = mod$coefficients
     }
@@ -198,8 +198,8 @@ lqmixTV.fit = function(y, x.fixed, namesFix, x.random, namesRan, sbj.obs, time.o
   res$sigma.e = sigmaErr
   res$lk = lk
   res$npar = npar
-  res$aic = aic
-  res$bic = bic
+  res$AIC = aic
+  res$BIC = bic
   res$qtl = qtl
   res$m = m
   res$nsbjs = n

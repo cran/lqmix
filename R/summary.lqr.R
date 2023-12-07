@@ -1,14 +1,14 @@
 #' Summary of an \code{lqr} object
 #'
-#' Summary method for the class \code{lqr}
+#' Summary method for the \code{\link{class}} \code{lqr}
 #'
-#' @param object an lqr object
+#' @param object an \code{lqr} object
 #' @param ... not used
 #'
 #' @return Return an object of \code{\link{class}} \code{summary.lqr}.
 #' This is a list of summary statistics for the fitted linear quantile regression model given in \code{object}, with the following elements:
 #'
-#' \item{fix}{a matrix with estimates, standard errors, Z statistics, and pvalues for the regression coefficients}
+#' \item{fix}{a matrix with estimates, standard errors, Z statistics, and p-values for the regression coefficients}
 #' \item{scale}{the scale parameter}
 #' \item{sigma.e}{the standard deviation of error terms}
 #' \item{lk}{the log-likelihood}
@@ -25,7 +25,7 @@
 summary.lqr <- function(object, ...){
 
   if(any(!is.null(c(object$se.betaf)))){
-    names = c("Estimate", "Std.Error", "z.value", "P(>|z|)")
+    names = c("Estimate", "St.Error", "z.value", "P(>|z|)")
 
     est = c(object$betaf)
     sef = c(object$se.betaf)
@@ -33,7 +33,7 @@ summary.lqr <- function(object, ...){
     pvalf = c(1.96*pnorm(-abs(zvalf)))
 
     tabf = cbind(Estimate = est,
-                 StdErr = sef,
+                 St.Err = sef,
                  t.value = zvalf,
                  p.value = pvalf)
     colnames(tabf) = names

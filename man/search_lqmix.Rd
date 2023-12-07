@@ -4,26 +4,29 @@
 \alias{search_lqmix}
 \title{Search the Global Maximum of a Linear Quantile Mixture}
 \usage{
-search_lqmix(formula, randomTC = NULL, randomTV = NULL, time, Gv = NULL,
-  mv = NULL, data, method = "bic", nran = 0, qtl = 0.5, eps = 10^-5,
-  maxit = 1000, se = TRUE, R = 50, verbose = TRUE)
+search_lqmix(formula, randomTC = NULL, randomTV = NULL, group, time,
+  Gv = NULL, mv = NULL, data, method = "bic", nran = 0, qtl = 0.5,
+  eps = 10^-5, maxit = 1000, se = TRUE, R = 50, verbose = TRUE,
+  seed = NULL, parallel = FALSE)
 }
 \arguments{
-\item{formula}{an object of class formula: a symbolic description of the model to be fitted}
+\item{formula}{an object of \code{\link{class}} \code{formula}: a symbolic description of the model to be fitted}
 
-\item{randomTC}{a one-sided formula of the form ~ z1 + z2 + ... + zr | group. z1,.,zr denote the variables associated to TC random coefficients (1 for the intercept), while group is the indicator for the grouping factor, i.e. the factor identifying the unit longitudinal measurements refer to}
+\item{randomTC}{a one-sided formula of the form \code{~z1+z2+...+zr}, where \code{z1,..., zr} denote the variables associated to TC random coefficients (1 for the intercept)}
 
-\item{randomTV}{a one-sided formula of the form ~ w1 + w2 + ... + wl | group. w1,.,wl denote the variables associated to TV random coefficients (1 for the intercept), while group is the indicator for the grouping factor, i.e. the factor identifying the unit longitudinal measurements refer to. Only TC variables are allowed.}
+\item{randomTV}{a one-sided formula of the form \code{~w1+w2+...+wl}, where \code{w1,..., wl} denote the variables associated to TV random coefficients (1 for the intercept). Note that only TC variables are allowed}
+
+\item{group}{a string indicating the grouping variable, i.e., the factor identifying the unit longitudinal measurements refer to}
 
 \item{time}{a string indicating the time variable}
 
-\item{Gv}{vector of possible number of mixture components associated to TC random coefficients}
+\item{Gv}{vector of possible number of mixture components associated to TC random coefficients (if present)}
 
-\item{mv}{vector of possible number of states associated to the TV random coefficients}
+\item{mv}{vector of possible number of states associated to the TV random coefficients (if present)}
 
-\item{data}{a data frame containing the variables named in formula, randomTC and/or randomTV, and time}
+\item{data}{a data frame containing the variables named in \code{formula}, \code{randomTC}, \code{randomTV}, and \code{time}}
 
-\item{method}{method to use for selecting the optimal model. Possible values are "lk", "aic", or "bic"}
+\item{method}{method to use for selecting the optimal model. Possible values are \code{"lk"}, \code{"aic"}, or \code{"bic"}}
 
 \item{nran}{number of repetitions of each random initialization}
 
@@ -38,17 +41,22 @@ search_lqmix(formula, randomTC = NULL, randomTV = NULL, time, Gv = NULL,
 \item{R}{number of bootstrap samples for computing standard errors}
 
 \item{verbose}{if set to FALSE, no printed output is given during the function execution}
+
+\item{seed}{an integer value for random numbers generation}
+
+\item{parallel}{if set to TRUE, a parallelized code is use for standard error computation (if se=TRUE)}
 }
 \value{
-Return a list with the following elements:
+Return an object of \code{\link{class}} \code{search_lqmix}. This is a list containing the following elements:
 \item{optimal}{the identified optimal model}
 \item{allmodels}{the output of each estimated model}
 \item{lkv}{the vector of likelihood values for each estimated model}
 \item{aicv}{the vector of AIC values for each estimated model}
 \item{bicv}{the vector of BIC values for each estimated model}
 \item{qtl}{the estimated quantile}
-\item{mv}{the vector of possible number of states associated to the TV random coefficients (if present)}
-\item{Gv}{the vector of possible number of mixture components associated to the TC random coefficients (if present)}
+\item{mv}{the vector of possible number of states associated to TV random coefficients (if present)}
+\item{Gv}{the vector of possible number of mixture components associated to TC random coefficients (if present)}
+\item{method}{the method used to select the optimal model}
 \item{call}{the matched call}
 }
 \description{
@@ -60,19 +68,19 @@ TC and/or TV random coefficients, respectively.
 This is done by considering a multi-start strategy based on both deterministic and random starting points.
 The number or random tries is proportional to the number of mixture components and/or hidden states associated to the random coefficients in the model.
 
-If \code{method="lk"} the optimal model selected by the function is that providing the highest log-likelihood value;
-if \code{method="AIC"} (\code{method="BIC"}, respectively), the optimal model selected by the function is that providing the lowest AIC (BIC, respectively) value.
+If \code{method="lk"}, the optimal model selected by the function is that providing the highest log-likelihood value;
+if \code{method="AIC"}, (\code{method="BIC"}, respectively), the optimal model selected by the function is that providing the lowest AIC (BIC, respectively) value.
 
 If \code{se=TRUE}, standard errors based on a block bootstrap procedure are computed for the identified optimal model.
 }
 \examples{
 sTC = search_lqmix(formula=meas~trt+time+trt:time,
-                   randomTC=~1|id,time="time",Gv=1:3,method="bic",data=pain,se=FALSE)
+                   randomTC=~1,group="id",time="time",Gv=1:3,method="bic",data=pain,se=FALSE)
 \donttest{
 sTV = search_lqmix(formula=meas~trt+time+trt:time,
-randomTV=~1|id,time="time",mv=1:3,method="bic",data=pain,se=FALSE)
+randomTV=~1,group="id",time="time",mv=1:3,method="bic",data=pain,se=FALSE)
 
 sTCTV = search_lqmix(formula=meas~trt+time+trt:time,
-randomTC=~time|id,randomTV=~1|id,time="time",mv=1:3,Gv=1:3,method="bic",data=pain,se=FALSE)
+randomTC=~time,randomTV=~1,group="id",time="time",mv=1:3,Gv=1:3,method="bic",data=pain,se=FALSE)
 }
 }

@@ -1,10 +1,10 @@
-#' Print a \code{search_lqmix} Object
+#' Print a \code{search_lqmix} object
 #'
 #' Print an object of \code{\link{class}} \code{search_lqmix}
 #'
 #'
 #' @param x a \code{search_lqmix} object
-#' @param digits a non-null value for digits specifies the minimum number of significant digits to be printed
+#' @param digits a non-null value for digits specifying the minimum number of significant digits to be printed
 #' @param ... not used
 #'
 #' @return Return a \code{search_lqmix} object

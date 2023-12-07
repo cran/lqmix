@@ -50,8 +50,8 @@ lqr.fit = function(y,x.fixed,namesFix,qtl,nObs,verbose){
   res$sigma.e = sigmaErr
   res$lk = lk
   res$npar = npar
-  res$aic = aic
-  res$bic = bic
+  res$AIC = aic
+  res$BIC = bic
   res$qtl = qtl
   res$nobs = nObs
 
