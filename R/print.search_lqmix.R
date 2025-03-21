@@ -17,9 +17,10 @@ print.search_lqmix = function(x, digits = max(3, getOption("digits") -3), ...){
     oo = x$optimal
     oo$call = NULL
 
-    if(!is.null(oo$se.scale)) print(summary(oo))
-    else print(oo)
+    # if(!is.null(oo$se.scale)) print(summary(oo))
+    # else
+    print(oo)
 
-  if(oo$miss == "non-monotone" & oo$mod != "TC") message("Data affected by non-monotone missingness: parameter estimates may be biased.")
+  #if(oo$miss == "non-monotone" & oo$mod != "TC") message("Data affected by non-monotone missingness: parameter estimates may be biased.")
   invisible(x)
 }

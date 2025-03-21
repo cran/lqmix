@@ -29,11 +29,12 @@ lqr.fit = function(y,x.fixed,namesFix,qtl,nObs,verbose){
   sigmaErr = sqrt(varAL(scale, qtl))
 
   if(verbose){
-    cat("------------|-------------|\n")
-    cat("  iteration |      lk     |\n")
-    cat("------------|-------------|\n")
-    cat(sprintf("%11g", c(0, lk)), "\n", sep = " | ")
-    cat("------------|-------------|\n")
+    cat("--------|-------|--------|-------------|\n")
+    cat("  model |  qtl  |  iter  |      lk     |\n")
+    cat("--------|-------|--------|-------------|\n")
+    cat(sprintf("%7s", "HOM"), sprintf("%5g", c(qtl)), sprintf("%6g", 0), sprintf("%11g", lk), "\n", sep = " | ")
+    cat("--------|-------|--------|-------------|\n")
+
   }
 
   npar = pf+1

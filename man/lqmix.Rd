@@ -8,7 +8,7 @@ lqmix(formula, randomTC = NULL, randomTV = NULL, group, time, G = NULL,
   m = NULL, data, qtl = 0.5, eps = 10^-5, maxit = 1000, se = TRUE,
   R = 50, start = 0, parInit = list(betaf = NULL, betarTC = NULL, betarTV
   = NULL, pg = NULL, delta = NULL, Gamma = NULL, scale = NULL),
-  verbose = TRUE, seed = NULL, parallel = FALSE)
+  verbose = TRUE, posterior = FALSE, seed = NULL, parallel = FALSE)
 }
 \arguments{
 \item{formula}{an object of class \code{\link{formula}}: a symbolic description of the model to be fitted}
@@ -33,15 +33,17 @@ lqmix(formula, randomTC = NULL, randomTV = NULL, group, time, G = NULL,
 
 \item{maxit}{maximum number of iterations for the EM algorithm}
 
-\item{se}{standard error computation for the optimal model}
+\item{se}{if set to TRUE, standard error are computed}
 
 \item{R}{number of bootstrap samples for computing standard errors}
 
 \item{start}{type of starting values (0 = deterministic, 1 = random, 2 = initial values in input)}
 
-\item{parInit}{list of initial model parameters when \code{start=2}. For a list of}
+\item{parInit}{list of initial model parameters when \code{start=2}}
 
 \item{verbose}{if set to FALSE, no printed output is given during the function execution}
+
+\item{posterior}{if set to TRUE, posterior probabilities are given in output}
 
 \item{seed}{an integer value for random numbers generation}
 
@@ -73,23 +75,25 @@ Return an object of \code{\link{class}} \code{lqmix}. This is a list containing 
 \item{se.Init}{the standard errors for the initial probabilities of the hidden Markov chain associated to TV random coefficients(if present)}
 \item{se.Trans}{the standard errors for the transition probabilities of the hidden Markov chain associated to TV random coefficients (if present)}
 \item{se.scale}{the standard error for the scale parameter}
+\item{postTC}{estimated posterior probabilities for the finite mixture components associated to TC random coefficients}
+\item{postTV}{estimated posterior probabilities for the hidden states associated to TV random coefficients}
 \item{miss}{the missingness type}
 \item{model}{the estimated model}
 \item{call}{the matched call}
 }
 \description{
-Estimate a finite mixture of linear quantile regression models with TC and/or TV, discrete, random coefficients, for a given number of components and/or states
+Estimate a finite mixture of linear quantile regression models with TC and/or TV discrete random coefficients, for a given number of components and/or states
 }
 \details{
-The function computes ML estimates for the parameters of a linear quantile mixture model, based on TC and/or TV random coefficients.
-Estimates are derived by maximizing the (log-)likelihood of a Laplace regression where the location parameter is modeled as a function of fixed coefficients, together with TC and/or TV discrete random coefficients, as proposed by Alfo' et. al (2017), Farcomeni (2012), and Marino et. al (2018), respectively.
+The function computes ML estimates for a linear quantile mixture model with on TC and/or TV random coefficients.
+Estimates are derived by maximizing the (log-)likelihood of an asymmetric Laplace regression, where the location parameter is modeled as a function of fixed coefficients, together with TC, TV, or TC and TV discrete random coefficients, as proposed by Alfo' et. al (2017), Farcomeni (2012), and Marino et. al (2018), respectively.
 
 The function requires data in long-format and two additional columns indicating the group identifier and the time occasion.
 The model is specified by means of the arguments \code{formula}, \code{formulaTC}, and \code{formulaTV}:
 \code{formula} is associated to fixed coefficients; \code{formulaTC} is associated to TC random coefficients; \code{formulaTV} is associated to TV random coefficients.
 In this latter, only TC variables (predictors) are allowed.
 
-The function admits the presence of missing data, both in terms of drop-outs (monotone missing data) and intermittent missing, under a missing-at-random assumption.
+The function allows for missing data, including dropouts (monotone missing data) and intermittent missingness, under a missing-at-random assumption.
 Note that, when TV random coefficients are considered, intermittent missingness may cause biased inference.
 
 If \code{se=TRUE}, standard errors based on a block bootstrap procedure are computed.

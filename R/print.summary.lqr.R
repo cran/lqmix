@@ -1,4 +1,4 @@
-#' Print the Summary of an \code{lqr} object
+#' Print the summary of an \code{lqr} object
 #'
 #' Print the summary of an an object of \code{\link{class}} \code{lqr}
 #'
@@ -23,7 +23,6 @@ print.summary.lqr = function(x, digits = max (3, getOption("digits") -3), ...){
 
   cat("\nLog-likelihood at convergence:", round(x$lk, digits))
   cat("\nNumber of observations:", x$nobs, "\n")
-  cat("Model: Homogeneous", sep = "")
 
   invisible(x)
 }

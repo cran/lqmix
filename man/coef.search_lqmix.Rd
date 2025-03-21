@@ -7,7 +7,7 @@
 \method{coef}{search_lqmix}(object, ...)
 }
 \arguments{
-\item{object}{an \code{lqmix} object}
+\item{object}{a \code{search_lqmix} object}
 
 \item{\dots}{not used}
 }

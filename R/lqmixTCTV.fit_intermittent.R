@@ -148,14 +148,14 @@ lqmixTCTV.fit = function(y, x.fixed, namesFix, x.randomTC,x.randomTV, namesRanTC
   # *********
 
   if(verbose){
-    cat("------------|-------------|-------------|-------------|-------------|\n")
-    cat("  iteration |      m      |      G      |      lk     |   (lk-lko)  |\n")
-    cat("------------|-------------|-------------|-------------|-------------|\n")
-    cat(sprintf("%11g", c(0, m, G, lk, NA)), "\n", sep = " | ")
+    cat("--------|-------|-------|-------|--------|-------------|-------------|\n")
+    cat("  model |  qtl  |   m   |   G   |  iter  |      lk     |   (lk-lko)  |\n")
+    cat("--------|-------|-------|-------|--------|-------------|-------------|\n")
+    cat(sprintf("%7s", "TCTV"), sprintf("%5s", c(qtl,m,G)), sprintf("%6g", 0), sprintf("%11g", c(lk, NA)), "\n", sep = " | ")
   }
 
   iter = 0; lk0 = lk
-  while (((lk - lk0) > eps | iter == 0) & (iter <= maxit)){
+  while ((abs(lk - lk0) > eps | iter == 0) & (iter <= maxit)){
     iter = iter +1; lk0 = lk
 
     # E step
@@ -164,7 +164,7 @@ lqmixTCTV.fit = function(y, x.fixed, namesFix, x.randomTC,x.randomTV, namesRanTC
 
     uSingle = post$uSingle
     uCouple = post$uCouple
-    etag = post$etag
+    wig = post$wig
     wgt = post$wgt
 
     # M-step
@@ -175,7 +175,7 @@ lqmixTCTV.fit = function(y, x.fixed, namesFix, x.randomTC,x.randomTV, namesRanTC
     num = apply(uCouple, c(2,3), sum, na.rm = T)
     den = apply(uCouple, c(2), sum, na.rm = T) %o% rep(1, m)
     Gamma = num/den
-    pg = colMeans(etag)
+    pg = colMeans(wig)
 
 
     ## estimate fixed parameters in the longitudinal data model
@@ -216,11 +216,11 @@ lqmixTCTV.fit = function(y, x.fixed, namesFix, x.randomTC,x.randomTV, namesRanTC
     lk = out$lk; li = out$li; A = out$A
 
     if(verbose)
-      if(iter/10 == floor(iter/10)) cat(sprintf("%11g", c(iter, m, G, lk, (lk -lk0))), "\n", sep = " | ")
+      if(iter/10 == floor(iter/10)) cat(sprintf("%7s", "TCTV"), sprintf("%5s", c(qtl,m,G)), sprintf("%6g", iter), sprintf("%11g", c(lk, abs(lk-lk0))), "\n", sep = " | ")
   }
   if(verbose){
-    if(iter/10 > floor(iter/10)) cat(sprintf("%11g", c(iter, m, G, lk, (lk -lk0))), "\n", sep = " | ")
-    cat("------------|-------------|-------------|-------------|-------------|\n")
+    if(iter/10 > floor(iter/10)) cat(sprintf("%7s", "TCTV"), sprintf("%5s", c(qtl,m,G)), sprintf("%6g", iter), sprintf("%11g", c(lk, abs(lk-lk0))), "\n", sep = " | ")
+    cat("--------|-------|-------|-------|--------|-------------|-------------|\n")
   }
 
   sigmaErr = sqrt(varAL(scale, qtl))
@@ -231,13 +231,28 @@ lqmixTCTV.fit = function(y, x.fixed, namesFix, x.randomTC,x.randomTV, namesRanTC
 
   # arrange output
   if(!is.null(betaf)) names(betaf) = namesFix
+
+  ordTC = order(betarTC[,1])
+  betarTC = matrix(betarTC[ordTC,], nrow = G)
+  ordTV = order(betarTV[,1])
+  betarTV = matrix(betarTV[ordTV,], nrow = m)
+
+  post = postComputeTCTV(A, li, delta, Gamma, pg, fithg, m, G, sbj.obs, time.obs, n, T, observed)
+  wig = post$wig[,ordTC]
+  uSingle = post$uSingle[,ordTV]
+
   colnames(betarTC) = namesRanTC
   colnames(betarTV) = namesRanTV
-
   rownames(betarTC) = paste("Comp", 1:nrow(betarTC), sep="")
   rownames(betarTV) = paste("St", 1:nrow(betarTV), sep="")
-  names(pg) = paste("Comp", 1:nrow(betarTC), sep="")
-  names(delta) = paste("St", 1:nrow(betarTV), sep="")
+
+  pg = pg[ordTC]
+  names(pg) = colnames(wig) = paste("Comp", 1:nrow(betarTC), sep="")
+
+  delta = delta[ordTV]
+  names(delta) =  colnames(uSingle) = paste("St", 1:nrow(betarTV), sep="")
+
+  Gamma = Gamma[ordTV, ordTV]
   rownames(Gamma) = paste("fromSt", 1:nrow(betarTV), sep="")
   colnames(Gamma) = paste("toSt", 1:nrow(betarTV), sep="")
 
@@ -259,6 +274,8 @@ lqmixTCTV.fit = function(y, x.fixed, namesFix, x.randomTC,x.randomTV, namesRanTC
   res$G = G
   res$nsbjs = n
   res$nobs = nObs
+  res$postTC = wig
+  res$postTV = uSingle
 
   return(res)
 }

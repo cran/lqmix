@@ -2,7 +2,7 @@
 % Please edit documentation in R/summary.lqmix.R
 \name{summary.lqmix}
 \alias{summary.lqmix}
-\title{Summary of an \code{lqmix} Object}
+\title{Summary of an \code{lqmix} object}
 \usage{
 \method{summary}{lqmix}(object, ...)
 }

@@ -4,7 +4,8 @@
 \alias{lqr}
 \title{Linear Quantile Regression}
 \usage{
-lqr(formula, data, qtl = 0.5, se = TRUE, R = 50, verbose = TRUE, ...)
+lqr(formula, data, qtl = 0.5, se = TRUE, R = 50, verbose = TRUE,
+  parallel = FALSE, ...)
 }
 \arguments{
 \item{formula}{an object of class \code{\link{formula}}: a symbolic description of the model to be fitted}
@@ -18,6 +19,8 @@ lqr(formula, data, qtl = 0.5, se = TRUE, R = 50, verbose = TRUE, ...)
 \item{R}{number of bootstrap samples for computing standard errors}
 
 \item{verbose}{if set to FALSE, no printed output is given during the function execution}
+
+\item{parallel}{if set to TRUE, a parallelized code is use for standard error computation (if se=TRUE)}
 
 \item{...}{further arguments to be passed to or from methods}
 }

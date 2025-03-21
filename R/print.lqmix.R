@@ -65,8 +65,6 @@ print.lqmix = function(x, digits = max(3, getOption("digits") -3), ...){
     names(x$pg) = paste("Comp", 1:nrow(x$betarTC), sep="")
     print(round(x$pg, digits))
 
-    # cat("\nStandard deviation of TC random coefficients: ", round(x$sigma.b, digits), "\n")
-
     cat("\nInitial probabilities:\n")
     names(x$delta) = paste("St", 1:nrow(x$betarTV), sep="")
     print(round(x$delta, digits))
@@ -108,7 +106,7 @@ print.lqmix = function(x, digits = max(3, getOption("digits") -3), ...){
   }
 
   cat("\nLog-likelihood at convergence:", round(x$lk, digits))
-  cat("\nNumber of observations:", x$nobs, "- Number of subjects:", x$nsbjs)
+  cat("\nNumber of observations:", x$nobs, "- Number of subjects:", x$nsbjs, "\n")
 
   if(x$miss == "non-monotone" & x$mod != "TC") message("Data affected by non-monotone missingness: parameter estimates may be biased.")
 

@@ -113,14 +113,17 @@ lqmixTV.fit = function(y, x.fixed, namesFix, x.random, namesRan, sbj.obs, time.o
   # *********
 
   if(verbose){
-    cat("------------|-------------|-------------|-------------|\n")
-    cat("  iteration |      m      |      lk     |   (lk-lko)  |\n")
-    cat("------------|-------------|-------------|-------------|\n")
-    cat(sprintf("%11g", c(0, m, lk, NA)), "\n", sep = " | ")
+    cat("--------|-------|-------|--------|-------------|-------------|\n")
+    cat("  model |  qtl  |   G   |  iter  |      lk     |   (lk-lko)  |\n")
+    cat("--------|-------|-------|--------|-------------|-------------|\n")
+    cat(sprintf("%7s", "TV"), sprintf("%5s", c(qtl,m)), sprintf("%6g", 0), sprintf("%11g", c(lk, NA)), "\n", sep = " | ")
+
+
   }
 
   iter = 0; lk0 = lk
-  while (((lk - lk0) > eps | iter == 0) & (iter <= maxit)){
+
+  while ((abs(lk - lk0) > eps | iter == 0) & (iter <= maxit)){
 
     iter = iter +1; lk0 = lk
 
@@ -129,7 +132,6 @@ lqmixTV.fit = function(y, x.fixed, namesFix, x.random, namesRan, sbj.obs, time.o
     post = postComputeTV_intermittent(A, li, delta, Gamma, fith, m, sbj.obs, time.obs, observed)
     uSingle = post$uSingle
     uCouple = post$uCouple
-
     # M-step
     # ******
     delta = colMeans(uSingle[time.obs == 1, ])
@@ -166,12 +168,12 @@ lqmixTV.fit = function(y, x.fixed, namesFix, x.random, namesRan, sbj.obs, time.o
     lk = out$lk; li = out$li; A = out$A
 
 
-    if(verbose)
-      if(iter/10 == floor(iter/10)) cat(sprintf("%11g", c(iter, m, lk, (lk -lk0))), "\n", sep = " | ")
+    if(verbose) if(iter/10 == floor(iter/10)) cat(sprintf("%7s", "TV"), sprintf("%5s", c(qtl,m)), sprintf("%6g", iter), sprintf("%11g", c(lk, abs(lk-lk0))), "\n", sep = " | ")
   }
   if(verbose){
-    if(iter/10 > floor(iter/10)) cat(sprintf("%11g", c(iter, m, lk, (lk -lk0))), "\n", sep = " | ")
-    cat("------------|-------------|-------------|-------------|\n")
+    if(iter/10 > floor(iter/10))  cat(sprintf("%7s", "TV"), sprintf("%5s", c(qtl,m)), sprintf("%6g", iter), sprintf("%11g", c(lk, abs(lk-lk0))), "\n", sep = " | ")
+
+    cat("--------|-------|-------|--------|-------------|-------------|\n")
   }
 
   sigmaErr = sqrt(varAL(scale, qtl))
@@ -182,12 +184,20 @@ lqmixTV.fit = function(y, x.fixed, namesFix, x.random, namesRan, sbj.obs, time.o
 
   # arrange output
   if(fixed) names(betaf) = namesFix
-  colnames(betar) = namesRan
 
+  ord = order(betar[,1])
+  betar = matrix(betar[ord,], nrow = m)
+  colnames(betar) = namesRan
   rownames(betar) = paste("St", 1:nrow(betar), sep="")
+
+  delta = delta[ord]
   names(delta) = paste("St", 1:nrow(betar), sep="")
+  Gamma = Gamma[ord, ord]
   rownames(Gamma) = paste("fromSt", 1:nrow(betar), sep="")
   colnames(Gamma) = paste("toSt", 1:nrow(betar), sep="")
+
+  uSingle =  post = postComputeTV_intermittent(A, li, delta, Gamma, fith, m, sbj.obs, time.obs, observed)$uSingle[,ord]
+  colnames(uSingle) = paste("St", 1:nrow(betar), sep="")
 
   res = list()
   res$betaf = betaf
@@ -204,5 +214,7 @@ lqmixTV.fit = function(y, x.fixed, namesFix, x.random, namesRan, sbj.obs, time.o
   res$m = m
   res$nsbjs = n
   res$nobs = nObs
+  res$postTV = uSingle
   return(res)
 }
+

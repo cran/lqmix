@@ -1,5 +1,10 @@
 lqmixTC = function(formula, randomTC, group, time, G, data, qtl=0.5, eps=10^-5, maxit=1000, se=TRUE, R=50, start=0, parInit = list(betaf=NULL, betarTC=NULL, pg=NULL, scale=NULL), verbose=TRUE, seed=NULL, parallel=FALSE, ...){
 
+  rho = function(x, qtl){
+    x * (qtl - ifelse(x <0, 1, 0))
+  }
+
+
   # start = 0 -- deterministic start
   # start = 1 -- random start
   # start = 2 -- start from given values
@@ -7,9 +12,6 @@ lqmixTC = function(formula, randomTC, group, time, G, data, qtl=0.5, eps=10^-5, 
 
   # ---- possible errors ------
   # ***************************
-  if(se==TRUE & is.null(R)){
-    mess = "\n The number of bootstrap samples for computing standard errors has not been specified. The default value R=50 has been used."
-  }else mess=NULL
 
   if(start == 2 & is.null(unlist(parInit))) stop("No input parameters have been given with start = 2.")
 
@@ -25,7 +27,6 @@ lqmixTC = function(formula, randomTC, group, time, G, data, qtl=0.5, eps=10^-5, 
   mformTC = gsub(" ", "", mformTC)
   formula.rTC = reformulate(mformTC[1]) # random formula terms
   mform2sbj = as.character(group) # id variable
-   # mformTC[2]
 
   if (!(all(mform2sbj %in% names(data)))) stop("The specified clustering variable is not contained in the data frame.")
   if (!(all(mform2time %in% names(data)))) stop("The specified time variable is not contained in the data frame.")
@@ -35,8 +36,6 @@ lqmixTC = function(formula, randomTC, group, time, G, data, qtl=0.5, eps=10^-5, 
 
   # ---- initial settings ----
   # ***************************
-  # printing options
-  if(verbose & length(as.logical(list(...)))==0) cat("Model TC - qtl =", qtl, "\n")
 
   # remove incomplete data
   names = c(unique(unlist(lapply(c(formula, formula.rTC), all.vars))), mform2sbj, mform2time)
@@ -54,15 +53,18 @@ lqmixTC = function(formula, randomTC, group, time, G, data, qtl=0.5, eps=10^-5, 
   # random model matrix
   mmr = model.matrix(formula.rTC, mfr)
 
-
   # intercept derived from the formula
   fixInt = attr(terms(mff), "intercept") == 1
   ranInt = attr(terms(mfr), "intercept") == 1
-  # if random intercept, remove intercept from fixed formula
-  if(ranInt == 1 & fixInt == 1) fixInt = 0
+
+  # if random intercept, remove it from fixed formula
+  if (ranInt && fixInt) fixInt = FALSE
+  #if(ranInt == 1 & fixInt == 1) fixInt = 0
 
   # identify the type of intercept: 0 -> fixed, 1 -> random TC, 999 -> no intercept in the model
-  ranInt = ifelse(ranInt == 1 & fixInt == 0, 1, ifelse(ranInt == 0 & fixInt == 1, 0, 999))
+    ranInt = if (ranInt && !fixInt) 1 else if (!ranInt && fixInt) 0 else 999
+
+  #if(all(c(ranInt, fixInt) == 0)) ranInt = 999
 
   # variable names
   termsFix = attr(terms(formula),"term.labels")
@@ -73,22 +75,28 @@ lqmixTC = function(formula, randomTC, group, time, G, data, qtl=0.5, eps=10^-5, 
   if(length(wh)>0) termsFix = termsFix[-wh]
 
   # any fixed slope? + reformulate the fixed model formula
+
   fixed = FALSE
   if(length(termsFix)>0){
-    formula = reformulate(termsFix, response=as.character(formula[2]), intercept = as.logical(fixInt))
-    # fixed model matrix
-    mmf = model.matrix(formula, mff)
-    fixed = TRUE
+    formula = reformulate(termsFix, response=as.character(formula[2]))
+
+    #fixed model matrix
+    mmf0 = mmf = model.matrix(formula, mff)
+    if(!as.logical(fixInt)){
+      mmf = as.matrix(mmf[,-1])
+      namesFix = attr(mmf0, "dimnames")[[2]][-1]
+      colnames(mmf) = namesFix
+      fixed = TRUE
+    }
   }else if(fixInt){
     formula = reformulate("1", response = as.character(formula[2]))
-    mmf = model.matrix(formula, mff)
-  } else formula = mmf = NULL
+    mmf = mmf0 = model.matrix(formula, mff)
+  } else formula = mmf0 = mmf = NULL
 
   # any random slope?
   ranSlope = FALSE
   if(length(termsRan>0)) ranSlope = 1
-
-  namesFix = colnames(mmf)
+  if(fixInt == 0) namesFix = colnames(mmf0)[-1] else namesFix = colnames(mmf0)
   namesRan = colnames(mmr)
 
 
@@ -106,7 +114,7 @@ lqmixTC = function(formula, randomTC, group, time, G, data, qtl=0.5, eps=10^-5, 
   # identify observed values
   time.obs = as.factor(data[,mform2time])
   T = length(unique(time.obs))
-  levels(sbj.obs) = 1:T
+  levels(time.obs) = 1:T
   time.obs = as.numeric(time.obs)
 
   # check whether missingness corresponds to dropout
@@ -145,6 +153,7 @@ lqmixTC = function(formula, randomTC, group, time, G, data, qtl=0.5, eps=10^-5, 
   if(!is.null(formula)){
     mff = model.frame(formula, data)
     x.fixed = model.matrix(formula, mff)
+    if(fixInt == 0) x.fixed = as.matrix(x.fixed[,-1])
   }else x.fixed = NULL
 
   # response variable
@@ -158,16 +167,25 @@ lqmixTC = function(formula, randomTC, group, time, G, data, qtl=0.5, eps=10^-5, 
   }else oo = parInit
   see = se
   if(se){
-    if(verbose) cat("Computing standard errors ... ")
+
+    if(verbose) cat("Computing standard errors ...\n")
 
     # number of parameters
     if(fixed | fixInt) pf = ncol(x.fixed) else pf = 0
     pr = ncol(x.random)
 
     if(parallel==TRUE) cl = makeCluster(2) else cl = makeCluster(1)
-    registerDoParallel(cl)
-    count=0
-    ooo.se = foreach(count = (1 : R)) %dopar%{
+    #registerDoParallel(cl)
+  cc=0
+#
+#
+    registerDoSNOW(cl)
+    pb = txtProgressBar(max = R, style = 3)
+    progress = function(x) setTxtProgressBar(pb,x)
+    opts = list(progress = progress)
+#
+    ooo.se = foreach(cc = (1 : R), .options.snow = opts) %dopar%{
+    #ooo.se = foreach(cc = (1 : R)) %dopar%{
 
       tries = 0
 
@@ -185,7 +203,7 @@ lqmixTC = function(formula, randomTC, group, time, G, data, qtl=0.5, eps=10^-5, 
         yy[observed] = y.obs
 
         # build new data matrices based on sampled units
-        set.seed(tries*count)
+        if(!is.null(seed)) set.seed(seed*tries*cc) else set.seed(tries*cc)
         sample.unit = sample(1:n, n, replace=TRUE)
 
         whTmax = tapply(time.obs, sbj.obs, max)
@@ -232,7 +250,7 @@ lqmixTC = function(formula, randomTC, group, time, G, data, qtl=0.5, eps=10^-5, 
       boot$scale = oo.se$scale
       return(boot)
     }
-
+    close(pb)
     stopImplicitCluster()
     parallel::stopCluster(cl)
     rm(cl)
@@ -267,9 +285,6 @@ lqmixTC = function(formula, randomTC, group, time, G, data, qtl=0.5, eps=10^-5, 
   class(oo) = "lqmix"
 
   return(oo)
-
-  message(mess)
-
 }
 
 

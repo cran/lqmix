@@ -17,16 +17,14 @@ lqmixTC.fit = function(y, x.fixed, namesFix, x.random, namesRan, id, G, qtl, n, 
 
   # ---- parameter initialization ----
   # ***********************************
-
   if(fixed | fixInt){
 
     mod1 = lm(y ~ .-1, data = data.frame(x.fixed,x.random))
     betaf = mod1$coef[1:pf]
     names(betaf) = namesFix
     mod0 = lm(y ~ .-1, data = data.frame(x.random,x.fixed))
-
   }else{
-    mod0 = lm(y ~ .-1, data = data.frame(x.random,x.fixed))
+    mod0 = lm(y ~ .-1, data = data.frame(x.random))
     betaf = NULL
     }
 
@@ -64,7 +62,6 @@ lqmixTC.fit = function(y, x.fixed, namesFix, x.random, namesRan, id, G, qtl, n, 
 
   }
 
-
   # ---- build design matrices and vectors -- (from nObs to nObs*G) ----
   # *********************************************************************
   onesG = rep(1, G)
@@ -77,7 +74,6 @@ lqmixTC.fit = function(y, x.fixed, namesFix, x.random, namesRan, id, G, qtl, n, 
     xf = onesG %x% x.fixed
     colnames(xf) = namesFix
   }else xf = NULL
-
 
   # compute densities
   # ******************
@@ -104,14 +100,14 @@ lqmixTC.fit = function(y, x.fixed, namesFix, x.random, namesRan, id, G, qtl, n, 
   # *********
 
   if(verbose){
-    cat("------------|-------------|-------------|-------------|\n")
-    cat("  iteration |      G      |      lk     |   (lk-lko)  |\n")
-    cat("------------|-------------|-------------|-------------|\n")
-    cat(sprintf("%11g", c(0, G, lk, NA)), "\n", sep = " | ")
+    cat("--------|-------|-------|--------|-------------|-------------|\n")
+    cat("  model |  qtl  |   G   |  iter  |      lk     |   (lk-lko)  |\n")
+    cat("--------|-------|-------|--------|-------------|-------------|\n")
+    cat(sprintf("%7s", "TC"), sprintf("%5s", c(qtl,G)), sprintf("%6g", 0), sprintf("%11g", c(lk, NA)), "\n", sep = " | ")
   }
 
   iter = 0; lk0 = lk
-  while (((lk - lk0) > eps | iter == 0) & (iter <= maxit)){
+  while ((abs(lk - lk0) > eps | iter == 0) & (iter <= maxit)){
 
     iter = iter +1; lk0 = lk
 
@@ -153,13 +149,15 @@ lqmixTC.fit = function(y, x.fixed, namesFix, x.random, namesRan, id, G, qtl, n, 
     lk = out$lk; li = out$li; lig=out$lig
 
     if(verbose)
-      if(iter/10 == floor(iter/10)) cat(sprintf("%11g", c(iter, G, lk, (lk -lk0))), "\n", sep = " | ")
-  }
+      if(iter/10 == floor(iter/10))  cat(sprintf("%7s", "TC"), sprintf("%5s", c(qtl,G)), sprintf("%6g", iter), sprintf("%11g", c(lk, abs(lk-lk0))), "\n", sep = " | ")
+
+    }
 
   if(verbose){
-    if(iter/10 > floor(iter/10)) cat(sprintf("%11g", c(iter, G, lk, (lk -lk0))), "\n", sep = " | ")
-    cat("------------|-------------|-------------|-------------|\n")
-  }
+    if(iter/10 > floor(iter/10)) cat(sprintf("%7s", "TC"), sprintf("%5s", c(qtl,G)), sprintf("%6g", iter), sprintf("%11g", c(lk, abs(lk-lk0))), "\n", sep = " | ")
+
+    cat("--------|-------|-------|--------|-------------|-------------|\n")
+    }
 
 
   sigmaErr = sqrt(varAL(scale, qtl))
@@ -170,10 +168,17 @@ lqmixTC.fit = function(y, x.fixed, namesFix, x.random, namesRan, id, G, qtl, n, 
 
   # arrange output
   if(!is.null(betaf)) names(betaf) = namesFix
+
+
+  ord = order(betar[,1])
+  betar = matrix(betar[ord,], nrow = G)
+  rownames(betar) = paste("Comp", 1:nrow(betar), sep = "")
   colnames(betar) = namesRan
 
-  rownames(betar) = paste("Comp", 1:nrow(betar), sep = "")
-  names(pg) = paste("Comp", 1:nrow(betar), sep = "")
+  pg = pg[ord]
+  wig = postComputeTC(lig=lig, fig=fig, pg=pg, G=G, Ti=Ti, order.time=order.time)$wig[,ord]
+  names(pg) = colnames(wig) = paste("Comp", 1:nrow(betar), sep = "")
+
 
   res = list()
   res$betaf = betaf
@@ -189,6 +194,7 @@ lqmixTC.fit = function(y, x.fixed, namesFix, x.random, namesRan, id, G, qtl, n, 
   res$G = G
   res$nsbjs = n
   res$nobs = nObs
+  res$postTC = wig
 
   return(res)
 }

@@ -8,6 +8,7 @@
 #' @param se standard error computation
 #' @param R number of bootstrap samples for computing standard errors
 #' @param verbose if set to FALSE, no printed output is given during the function execution
+#' @param parallel if set to TRUE, a parallelized code is use for standard error computation (if se=TRUE)
 #' @param ... further arguments to be passed to or from methods
 #'
 #' @details
@@ -23,6 +24,14 @@
 #' methods
 #'
 #' @importFrom Rdpack reprompt
+#' @importFrom parallel makeCluster
+#' @importFrom parallel stopCluster
+#' @importFrom utils setTxtProgressBar
+#' @importFrom utils txtProgressBar
+#' @importFrom doSNOW registerDoSNOW
+#' @importFrom foreach foreach
+#' @importFrom doParallel stopImplicitCluster
+#' @importFrom foreach %dopar%
 #'
 #' @return Return an object of \code{\link{class}} \code{lqr}. This is a list containing the following elements:
 #' \item{betaf}{a vector containing fixed regression coefficients}
@@ -47,7 +56,7 @@
 #' out0 = lqr(formula=meas~trt+time+trt:time,data=pain,se=TRUE,R=10)
 #' @export
 
-lqr = function(formula, data, qtl=0.5, se=TRUE, R=50, verbose=TRUE, ...){
+lqr = function(formula, data, qtl=0.5, se=TRUE, R=50, verbose=TRUE, parallel=FALSE, ...){
 
   # ---- possible errors -----
   # ***************************
@@ -89,44 +98,48 @@ lqr = function(formula, data, qtl=0.5, se=TRUE, R=50, verbose=TRUE, ...){
 
   see = se
   if(se){
-    if(verbose) cat("Computing standard errors: ")
-    boot.se = c()
-    count = tries = 0
-    done = FALSE
+    if(verbose) cat("Computing standard errors ...\n")
+    if(parallel==TRUE) cl = makeCluster(2) else cl = makeCluster(1)
+    cc = 0
+    registerDoSNOW(cl)
+    pb = txtProgressBar(max = R, style = 3)
+    progress = function(x) setTxtProgressBar(pb,x)
+    opts = list(progress = progress)
 
-    while(count < R & tries <= (R*10)){
-      tries = tries + 1
-      if (tries == R*10)  stop("Standard errors may not be computed.")
+    ooo.se = foreach(cc = (1 : R), .options.snow = opts) %dopar%{
+    tries = 0
+      while(tries <= (R*10)){
+        tries = tries + 1
+        if (tries == R*10)  stop("Standard errors may not be computed.")
 
-      # build the complete data matrices of size (n*T)*(?)
-      pf = oo$pf
+        # build the complete data matrices of size (n*T)*(?)
+        pf = oo$pf
 
-      # build new data matrices based on sampled units
-      set.seed(tries)
-      sample.unit = sample(1:nObs, nObs, replace=TRUE)
+        # build new data matrices based on sampled units
+        set.seed(tries)
+        sample.unit = sample(1:nObs, nObs, replace=TRUE)
 
-      x.fix.sample = x.fixed[sample.unit,]
-      y.sample = y.obs[sample.unit]
+        x.fix.sample = x.fixed[sample.unit,]
+        y.sample = y.obs[sample.unit]
 
-      colnames(x.fix.sample) = namesFix
+        colnames(x.fix.sample) = namesFix
 
-      oo.se = tryCatch(suppressWarnings(lqr.fit(y=y.sample, x.fixed=x.fix.sample,
-                               namesFix=namesFix, qtl=qtl, nObs=nObs,verbose=FALSE)),error=function(e){e})
-      if(!is(oo.se, "error")){
-        count = count + 1
-        if(verbose==T) cat(count, " ... ")
-        if (length(as.logical(list(...)))>0) cat(count, " ... ")
-
-        boot = list ()
-        boot$betaf = oo.se$betaf
-        boot$scale = oo.se$scale
-
-        boot.se = rbind(boot.se, unlist(lapply(boot, function(x) c(t(x)))))
-
+        oo.se = tryCatch(suppressWarnings(lqr.fit(y=y.sample, x.fixed=x.fix.sample,
+                                 namesFix=namesFix, qtl=qtl, nObs=nObs,verbose=FALSE)),error=function(e){e})
+        if(!is(oo.se, "error")) break
       }
+      boot = list ()
+      boot$betaf = oo.se$betaf
+      boot$scale = oo.se$scale
+
+      return(boot)
     }
 
-    se = apply(boot.se, 2, sd)
+    close(pb)
+    stopImplicitCluster()
+    parallel::stopCluster(cl)
+    rm(cl)
+    se = apply(sapply(ooo.se,unlist), 1, sd)
 
     oo$se.betaf = se[grep("betaf", names(se))]
     names(oo$se.betaf) = namesFix

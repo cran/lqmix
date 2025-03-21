@@ -6,7 +6,7 @@
 #' @param \dots not used
 #'
 #' @importFrom grDevices devAskNewPage
-#' @importFrom graphics axis par legend par matplot
+#' @importFrom graphics axis par legend par matplot barplot
 #' @importFrom diagram plotmat
 #'
 #' @export
@@ -16,20 +16,15 @@
 plot.lqmix = function(x,...){
 
   if(x$model == "TC"){
-    par(mar = c(0,2,2,2))
-    pg = round(diag(x$pg),2)
-    plotmat(pg,relsize=0.7,
-            name = as.character(1:x$G), box.col="lightgray",
-            box.size = diag(pg)*0.5,
-            box.lwd = 1,
-            self.cex = 0.8,add = F,
-            self.lwd = 0,
-            cex.txt = 0.8,
-            arr.type = "none",arr.width = 0.4,
-            box.prop = 0.5,
-            main="Component probabilities")
+
+    par(mar = c(4,5,3,3))
+    pg = round(x$pg,2)
+    names(pg) = as.character(1:length(pg))
+    barplot(pg, ylim = c(0,1), ylab = "pg", main = "Component probabilities", cex.main = 1)
+
 
   }else if(x$model == "TV"){
+
     par(mar = c(0,2,2,2))
     Gamma = round(t(x$Gamma),2)
     plotmat(Gamma,relsize=0.7,
@@ -44,18 +39,10 @@ plot.lqmix = function(x,...){
             box.prop = 0.5,main="Transition probabilities")
 
   } else{
-    par(mar = c(0,2,2,2))
-    pg = round(diag(x$pg),2)
-    plotmat(pg,relsize=0.7,
-            name = as.character(1:x$G), box.col="lightgray",
-            box.size = diag(pg)*0.5,
-            box.lwd = 1,
-            self.cex = 0.8,
-            self.lwd = 0,
-            cex.txt = 0.8,
-            arr.type = "none",add = F,arr.width = 0.4,
-            box.prop = 0.5,
-            main="Component probabilities")
+    par(mar = c(4,5,3,3))
+    pg = round(x$pg,2)
+    names(pg) = as.character(1:length(pg))
+    barplot(pg, ylim = c(0,1), ylab = "pg", main = "Component probabilities", cex.main = 1)
 
     devAskNewPage(ask = T)
     par(mar = c(0,2,2,2))

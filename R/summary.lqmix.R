@@ -1,4 +1,4 @@
-#' Summary of an \code{lqmix} Object
+#' Summary of an \code{lqmix} object
 #'
 #' Summary method for the \code{\link{class}} \code{lqmix}
 #'
@@ -43,7 +43,7 @@ summary.lqmix = function(object, ...){
       pvalf = c(1.96*pnorm(-abs(zvalf)))
 
       tabf = cbind(Estimate = est,
-                   St.Err = sef,
+                   St.Error = sef,
                    t.value = zvalf,
                    p.value = pvalf)
       colnames(tabf) = names
@@ -59,7 +59,7 @@ summary.lqmix = function(object, ...){
       pvalTC = c(1.96*pnorm(-abs(zvalTC)))
 
       tabTC = cbind(Estimate = est,
-                   St.Err = seTC,
+                   St.Error = seTC,
                    z.value = zvalTC,
                    p.value = pvalTC)
       colnames(tabTC) = names
@@ -73,21 +73,21 @@ summary.lqmix = function(object, ...){
       pvalTV = c(1.96*pnorm(-abs(zvalTV)))
 
       tabTV = cbind(Estimate = est,
-                    St.Err = seTV,
+                    St.Error = seTV,
                     z.value = zvalTV,
                     p.value = pvalTV)
       colnames(tabTV) = names
       rownames(tabTV) = c(sapply(colnames(object$betarTV), function(xx) paste(xx, paste("St", 1:nrow(object$betarTV), sep=""), sep="_")))
 
-      tabMprob = cbind(Estimate = object$pg, St.Err = object$se.pg)
+      tabMprob = cbind(Estimate = object$pg, St.Error = object$se.pg)
 
-      tabInit = cbind(Estimate = object$delta, St.Err = object$se.delta)
+      tabInit = cbind(Estimate = object$delta, St.Error = object$se.delta)
 
       tmp1 = c(t(object$Gamma))
       names(tmp1) = paste(rep(rownames(object$Gamma), each=object$m), rep(colnames(object$Gamma), object$m), sep="")
       tmp2 = c(t(object$se.Gamma))
       names(tmp1) = paste(rep(rownames(object$Gamma), each=object$m), rep(colnames(object$Gamma), object$m), sep="")
-      tabTrans = cbind(Estimate = tmp1, St.Err = tmp2)
+      tabTrans = cbind(Estimate = tmp1, St.Error = tmp2)
 
     }else if (!is.null(object$betarTC) & is.null(object$betarTV)){ # TC
 
@@ -99,7 +99,7 @@ summary.lqmix = function(object, ...){
       pvalTC = c(1.96*pnorm(-abs(zvalTC)))
 
       tabTC = cbind(Estimate = est,
-                    St.Err = seTC,
+                    St.Error = seTC,
                     z.value = zvalTC,
                     p.value = pvalTC)
 
@@ -108,7 +108,7 @@ summary.lqmix = function(object, ...){
 
       tabTV = NULL
 
-      tabMprob = cbind(Estimate = object$pg, St.Err = object$se.pg)
+      tabMprob = cbind(Estimate = object$pg, St.Error = object$se.pg)
 
       tabInit = NULL
       tabTrans = NULL
@@ -122,7 +122,7 @@ summary.lqmix = function(object, ...){
       pvalTV = c(1.96*pnorm(-abs(zvalTV)))
 
       tabTV = cbind(Estimate = estTV,
-                    St.Err = seTV,
+                    St.Error = seTV,
                     z.value = zvalTV,
                     p.value = pvalTV)
 
@@ -131,13 +131,13 @@ summary.lqmix = function(object, ...){
 
       tabTC = NULL
       tabMprob = NULL
-      tabInit = cbind(Estimate = object$delta, St.Err = object$se.delta)
+      tabInit = cbind(Estimate = object$delta, St.Error = object$se.delta)
 
       tmp1 = c(t(object$Gamma))
       names(tmp1) = paste(rep(rownames(object$Gamma), each=object$m), rep(colnames(object$Gamma), object$m), sep="")
       tmp2 = c(t(object$se.Gamma))
       names(tmp1) = paste(rep(rownames(object$Gamma), each=object$m), rep(colnames(object$Gamma), object$m), sep="")
-      tabTrans = cbind(Estimate = tmp1, St.Err = tmp2)
+      tabTrans = cbind(Estimate = tmp1, St.Error = tmp2)
 
     }
 

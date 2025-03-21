@@ -2,7 +2,7 @@
 % Please edit documentation in R/print.summary.lqr.R
 \name{print.summary.lqr}
 \alias{print.summary.lqr}
-\title{Print the Summary of an \code{lqr} object}
+\title{Print the summary of an \code{lqr} object}
 \usage{
 \method{print}{summary.lqr}(x, digits = max(3, getOption("digits") - 3), ...)
 }

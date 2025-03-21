@@ -1,6 +1,6 @@
 #' Linear Quantile Mixture with TC and/or TV, discrete, random coefficients
 #'
-#' Estimate a finite mixture of linear quantile regression models with TC and/or TV, discrete, random coefficients, for a given number of components and/or states
+#' Estimate a finite mixture of linear quantile regression models with TC and/or TV discrete random coefficients, for a given number of components and/or states
 #'
 #' @param formula an object of class \code{\link{formula}}: a symbolic description of the model to be fitted
 #' @param randomTC a one-sided formula of the form \code{~z1+z2+...+zr}, where \code{z1,..., zr} denote the variables associated to TC random coefficients (1 for the intercept)
@@ -13,26 +13,27 @@
 #' @param qtl quantile to be estimated
 #' @param eps tolerance level for (relative) convergence of the EM algorithm
 #' @param maxit maximum number of iterations for the EM algorithm
-#' @param se standard error computation for the optimal model
+#' @param se if set to TRUE, standard error are computed
 #' @param R number of bootstrap samples for computing standard errors
 #' @param start type of starting values (0 = deterministic, 1 = random, 2 = initial values in input)
-#' @param parInit list of initial model parameters when \code{start=2}. For a list of
+#' @param parInit list of initial model parameters when \code{start=2}
 #' @param seed an integer value for random numbers generation
 #' @param verbose if set to FALSE, no printed output is given during the function execution
+#' @param posterior if set to TRUE, posterior probabilities are given in output
 #' @param parallel if set to TRUE, a parallelized code is use for standard error computation (if se=TRUE)
 #'
 #' @details
 #'
 #'
-#' The function computes ML estimates for the parameters of a linear quantile mixture model, based on TC and/or TV random coefficients.
-#' Estimates are derived by maximizing the (log-)likelihood of a Laplace regression where the location parameter is modeled as a function of fixed coefficients, together with TC and/or TV discrete random coefficients, as proposed by Alfo' et. al (2017), Farcomeni (2012), and Marino et. al (2018), respectively.
+#' The function computes ML estimates for a linear quantile mixture model with on TC and/or TV random coefficients.
+#' Estimates are derived by maximizing the (log-)likelihood of an asymmetric Laplace regression, where the location parameter is modeled as a function of fixed coefficients, together with TC, TV, or TC and TV discrete random coefficients, as proposed by Alfo' et. al (2017), Farcomeni (2012), and Marino et. al (2018), respectively.
 #'
 #' The function requires data in long-format and two additional columns indicating the group identifier and the time occasion.
 #' The model is specified by means of the arguments \code{formula}, \code{formulaTC}, and \code{formulaTV}:
 #' \code{formula} is associated to fixed coefficients; \code{formulaTC} is associated to TC random coefficients; \code{formulaTV} is associated to TV random coefficients.
 #' In this latter, only TC variables (predictors) are allowed.
 #'
-#' The function admits the presence of missing data, both in terms of drop-outs (monotone missing data) and intermittent missing, under a missing-at-random assumption.
+#' The function allows for missing data, including dropouts (monotone missing data) and intermittent missingness, under a missing-at-random assumption.
 #' Note that, when TV random coefficients are considered, intermittent missingness may cause biased inference.
 #'
 #' If \code{se=TRUE}, standard errors based on a block bootstrap procedure are computed.
@@ -42,13 +43,17 @@
 #' quantreg
 #' stats
 #' methods
-#' doParallel
-#' foreach
-#'
+#' parallel
 #'
 #' @importFrom Rdpack reprompt
 #' @importFrom parallel makeCluster
 #' @importFrom parallel stopCluster
+#' @importFrom utils setTxtProgressBar
+#' @importFrom utils txtProgressBar
+#' @importFrom doSNOW registerDoSNOW
+#' @importFrom foreach foreach
+#' @importFrom doParallel stopImplicitCluster
+#' @importFrom foreach %dopar%
 #'
 #' @return Return an object of \code{\link{class}} \code{lqmix}. This is a list containing the following elements:
 #' \item{betaf}{a vector containing fixed regression coefficients}
@@ -75,6 +80,8 @@
 #' \item{se.Init}{the standard errors for the initial probabilities of the hidden Markov chain associated to TV random coefficients(if present)}
 #' \item{se.Trans}{the standard errors for the transition probabilities of the hidden Markov chain associated to TV random coefficients (if present)}
 #' \item{se.scale}{the standard error for the scale parameter}
+#' \item{postTC}{estimated posterior probabilities for the finite mixture components associated to TC random coefficients}
+#' \item{postTV}{estimated posterior probabilities for the hidden states associated to TV random coefficients}
 #' \item{miss}{the missingness type}
 #' \item{model}{the estimated model}
 #' \item{call}{the matched call}
@@ -102,13 +109,9 @@
 #'}
 #' @export
 
-lqmix = function(formula,randomTC=NULL,randomTV=NULL,group,time,G=NULL,m=NULL,data,qtl=0.5,eps=10^-5,maxit=1000,se=TRUE,R=50,start=0,parInit=list(betaf=NULL,  betarTC=NULL, betarTV=NULL, pg=NULL, delta = NULL, Gamma = NULL, scale=NULL),verbose=TRUE,seed=NULL,parallel=FALSE){
+lqmix = function(formula,randomTC=NULL,randomTV=NULL,group,time,G=NULL,m=NULL,data,qtl=0.5,eps=10^-5,maxit=1000,se=TRUE,R=50,start=0,parInit=list(betaf=NULL,  betarTC=NULL, betarTV=NULL, pg=NULL, delta = NULL, Gamma = NULL, scale=NULL),verbose=TRUE,posterior=FALSE,seed=NULL,parallel=FALSE){
 
-  # general possible errors
-  if(se==TRUE & is.null(R)){
-    R = 50
-    mess = "\n The number of bootstrap samples for computing standard errors has not been specified. The default value R=50 has been used."
-  }else mess=NULL
+  if(is.null(data)) stop("No input dataset has been given.")
 
   if(start == 2 & is.null(unlist(parInit))) stop("No input parameters have been given with start = 2.")
 
@@ -127,7 +130,7 @@ lqmix = function(formula,randomTC=NULL,randomTV=NULL,group,time,G=NULL,m=NULL,da
 
     model = "TC"
 
-    oo = lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=G,eps=eps,data=data,qtl=qtl,verbose=verbose,maxit=maxit,se=se,R=R,start=start,seed=seed,parallel=parallel)
+    oo = lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=G,eps=eps,data=data,qtl=qtl,verbose=verbose,maxit=maxit,se=se,R=R,start=start,parInit=parInit,seed=seed,parallel=parallel)
 
   }
 
@@ -140,7 +143,7 @@ lqmix = function(formula,randomTC=NULL,randomTV=NULL,group,time,G=NULL,m=NULL,da
 
 
     model = "TV"
-    oo = lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=m,eps=eps,data=data,qtl=qtl,verbose=verbose,se=se,R=R,start=start,seed=seed,parallel=parallel)
+    oo = lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=m,eps=eps,data=data,qtl=qtl,verbose=verbose,maxit=maxit,se=se,R=R,start=start,parInit=parInit,seed=seed,parallel=parallel)
 
 
   }else{ # model = TCTV
@@ -149,11 +152,21 @@ lqmix = function(formula,randomTC=NULL,randomTV=NULL,group,time,G=NULL,m=NULL,da
     if(!any(is.null(G), is.null(m)) & any(is.null(randomTC), is.null(randomTV))) stop("The argument(s) randomTC and/or randomTV has/have not been specified.")
 
     model = "TCTV"
-    oo = lqmixTCTV(formula=formula,randomTC=randomTC,randomTV=randomTV,group=group,time=time,m=m,G=G,eps=eps,data=data,qtl=qtl,verbose=verbose,se=se,R=R,start=start,seed=seed,parallel=parallel)
+    oo = lqmixTCTV(formula=formula,randomTC=randomTC,randomTV=randomTV,group=group,time=time,m=m,G=G,eps=eps,data=data,qtl=qtl,verbose=verbose,maxit=maxit,se=se,R=R,start=start,parInit=parInit,seed=seed,parallel=parallel)
+  }
+
+  if(!posterior){
+    oo$postTC = NULL
+    oo$postTV = NULL
   }
 
   if(!inherits(oo, "error")){
     oo$call <- match.call()
+    oo$formula <- formula
+    oo$randomTC <- randomTC
+    oo$randomTV <- randomTV
+    oo$group <- group
+    oo$time <- time
     class(oo) <- "lqmix"
   }
   return(oo)

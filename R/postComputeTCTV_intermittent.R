@@ -41,7 +41,7 @@ postComputeTCTV = function(A, li, delta, Gamma, pg, fithg, m, G, sbj.obs, time.o
   uSingle = uSingle[observed,]
 
   # posterior for mixture proportions
-  etag = 1/li * t(apply(apply(A[time == T,,], c(1,2), function(xx){xx * pg}), c(1,2), sum))
+  wig = 1/li * t(apply(apply(A[time == T,,], c(1,2), function(xx){xx * pg}), c(1,2), sum))
 
   # posterior for the longitudinal process
 
@@ -51,5 +51,5 @@ postComputeTCTV = function(A, li, delta, Gamma, pg, fithg, m, G, sbj.obs, time.o
   wgt =  tmp * den
   wgt = wgt[observed,,]
 
-  return(out = list(uSingle = uSingle, uCouple = uCouple, etag=etag, wgt=wgt))
+  return(out = list(uSingle = uSingle, uCouple = uCouple, wig=wig, wgt=wgt))
 }

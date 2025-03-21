@@ -1,17 +1,17 @@
-#' Print the summary of an \code{lqmix} object
+#' Print the summary of a \code{search_lqmix} object
 #'
-#' Print the summary of an object of \code{\link{class}} \code{lqmix}
+#' Print the summary of an object of \code{\link{class}} \code{search_lqmix}
 #'
-#' @param x a summary of an \code{lqmix} object
+#' @param x a summary of a \code{search_lqmix} object
 #' @param digits a non-null value for digits specifying the minimum number of significant digits to be printed
 #' @param ... not used
 #'
-#' @return Return a summary of an \code{lqmix} object
+#' @return Return a summary of a \code{search_lqmix} object
 #'
 #' @export
 
 
-print.summary.lqmix = function(x, digits = max (3, getOption("digits") -3), ...){
+print.summary.search_lqmix = function(x, digits = max (3, getOption("digits") -3), ...){
 
   if(!is.null(x$call)){
     if(x$model == "TC"){
@@ -52,7 +52,6 @@ print.summary.lqmix = function(x, digits = max (3, getOption("digits") -3), ...)
   }
 
   if(!is.null(x$ranTC) & !is.null(x$ranTV)){ #TCTV
-
     cat("\nTime-Constant Random Coefficients:\n")
     printCoefmat(round(x$ranTC, digits), P.values=TRUE, has.Pvalue=TRUE,
                  signif.stars = TRUE, signif.legend = F)

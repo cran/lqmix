@@ -2,7 +2,7 @@
 % Please edit documentation in R/print.summary.lqmix.R
 \name{print.summary.lqmix}
 \alias{print.summary.lqmix}
-\title{Print the Summary of an \code{lqmix} object}
+\title{Print the summary of an \code{lqmix} object}
 \usage{
 \method{print}{summary.lqmix}(x, digits = max(3, getOption("digits") - 3),
   ...)

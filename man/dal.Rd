@@ -25,8 +25,7 @@ Compute the density for the three parameter Asymmetric Laplace Distribution
 }
 \details{
 The function computes the density of the Asymmetric Laplace distribution, with location \eqn{\mu}, scale \eqn{\sigma > 0}
-and skewness \code{qtl = q} in (0,1),
-as discussed by Koenker and Machado (1999) and Yu and Moyeed (2001), according to the following expression
+and skewness \code{qtl = q} in (0,1), as discussed by Koenker and Machado (1999) and Yu and Moyeed (2001), according to the following expression
 
 \deqn{f(y | \mu, \sigma, q) = \frac{q(1-q)}{\sigma} \exp(-\rho_{q} (\frac{y-\mu}{\sigma}))}
 }

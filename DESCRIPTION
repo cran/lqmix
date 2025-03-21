@@ -2,8 +2,8 @@ Package: lqmix
 Type: Package
 Title: Linear Quantile Mixture Models
 Description: Estimate linear quantile mixtures based on Time-Constant (TC) and/or Time-Varying (TV), discrete, random coefficients.
-Date: 2023-11-07
-Version: 1.0
+Date: 2025-03-21
+Version: 1.1
 Authors@R: c(person("Maria Francesca", "Marino", role = c("aut","cre"), email = "mariafrancesca.marino@unifi.it"),
 	           person("Marco", "Alfo'", role = "aut", email = "marco.alfo@uniroma1.it"),
 	           person("Nicola", "Salvati", role = "aut", email = "nicola.salvati@unipi.it"),
@@ -17,11 +17,13 @@ Depends: R (>= 3.5.0)
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: TRUE
-Imports: quantreg, stats, methods, Rdpack, diagram, doParallel, foreach
-        , parallel
+Imports: quantreg, stats, methods, Rdpack, diagram, doParallel,
+        foreach, doSNOW
 RdMacros: Rdpack
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
+Suggests: testthat (>= 3.0.0)
+Config/testthat/edition: 3
 NeedsCompilation: no
-Packaged: 2023-12-07 10:15:31 UTC; mfm
+Packaged: 2025-03-21 11:45:47 UTC; mfm
 Repository: CRAN
-Date/Publication: 2023-12-07 10:50:11 UTC
+Date/Publication: 2025-03-21 12:20:02 UTC

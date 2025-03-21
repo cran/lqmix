@@ -7,7 +7,7 @@
 search_lqmix(formula, randomTC = NULL, randomTV = NULL, group, time,
   Gv = NULL, mv = NULL, data, method = "bic", nran = 0, qtl = 0.5,
   eps = 10^-5, maxit = 1000, se = TRUE, R = 50, verbose = TRUE,
-  seed = NULL, parallel = FALSE)
+  posterior = FALSE, seed = NULL, parallel = FALSE)
 }
 \arguments{
 \item{formula}{an object of \code{\link{class}} \code{formula}: a symbolic description of the model to be fitted}
@@ -41,6 +41,8 @@ search_lqmix(formula, randomTC = NULL, randomTV = NULL, group, time,
 \item{R}{number of bootstrap samples for computing standard errors}
 
 \item{verbose}{if set to FALSE, no printed output is given during the function execution}
+
+\item{posterior}{if set to TRUE, posterior probabilities are given in output}
 
 \item{seed}{an integer value for random numbers generation}
 
@@ -83,4 +85,5 @@ randomTV=~1,group="id",time="time",mv=1:3,method="bic",data=pain,se=FALSE)
 sTCTV = search_lqmix(formula=meas~trt+time+trt:time,
 randomTC=~time,randomTV=~1,group="id",time="time",mv=1:3,Gv=1:3,method="bic",data=pain,se=FALSE)
 }
+
 }
