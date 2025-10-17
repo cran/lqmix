@@ -1,12 +1,12 @@
 #' Print the summary of a \code{search_lqmix} object
 #'
-#' Print the summary of an object of \code{\link{class}} \code{search_lqmix}
+#' Print the summary of an object of \code{\link{class}} \code{\link{search_lqmix}}.
 #'
 #' @param x a summary of a \code{search_lqmix} object
 #' @param digits a non-null value for digits specifying the minimum number of significant digits to be printed
 #' @param ... not used
 #'
-#' @return Return a summary of a \code{search_lqmix} object
+#' @return Return a summary of a \code{\link{search_lqmix}} object.
 #'
 #' @export
 

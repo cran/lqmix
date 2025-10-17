@@ -1,15 +1,17 @@
 #' Linear Quantile Regression
 #'
-#' Estimate a linear quantile regression model with no random coefficients
+#' Estimate a linear quantile regression model for independent data (no random coefficients).
 #'
-#' @param formula an object of class \code{\link{formula}}: a symbolic description of the model to be fitted
-#' @param data a data frame containing the variables named in \code{formula} and \code{time}
+#' @param formula an object of class \code{formula}: a symbolic description of the model to be fitted
+#' @param data a data frame containing the variables named in \code{formula}
 #' @param qtl quantile to be estimated
 #' @param se standard error computation
 #' @param R number of bootstrap samples for computing standard errors
 #' @param verbose if set to FALSE, no printed output is given during the function execution
+#' @param seed an integer value for random numbers generation, used for bootstrap standard errors
 #' @param parallel if set to TRUE, a parallelized code is use for standard error computation (if se=TRUE)
-#' @param ... further arguments to be passed to or from methods
+#' @param ncores number of cores used for computing bootstrap standard errors (if required)
+#' @param ... not used
 #'
 #' @details
 #' The function computes ML estimates for the parameters of a linear quantile regression model for independent observations.
@@ -31,9 +33,9 @@
 #' @importFrom doSNOW registerDoSNOW
 #' @importFrom foreach foreach
 #' @importFrom doParallel stopImplicitCluster
-#' @importFrom foreach %dopar%
+#' @importFrom doRNG %dorng%
 #'
-#' @return Return an object of \code{\link{class}} \code{lqr}. This is a list containing the following elements:
+#' @return Return an object of \code{class} \code{lqr}. This is a list containing the following elements:
 #' \item{betaf}{a vector containing fixed regression coefficients}
 #' \item{scale}{the scale parameter}
 #' \item{sigma.e}{the standard deviation of error terms}
@@ -43,83 +45,76 @@
 #' \item{BIC}{the BIC value}
 #' \item{qtl}{the estimated quantile}
 #' \item{nobs}{the total number of observations}
-#' \item{se.betaf}{the standard errors for fixed regression coefficients}
+#' \item{se.betaf}{the standard errors for the regression coefficients}
 #' \item{se.scale}{the standard error for the scale parameter}
 #' \item{model}{the estimated model}
+#' \item{mmf}{the model matrix associated to the regression coefficients}
+#' \item{y}{the model response}
 #' \item{call}{the matched call}
+#' \item{formula}{the model formula}
 #'
 #' @references{
-#'   \insertRef{ref:lqr}{lqmix}
+#'   \insertRef{ref:KoeBas}{lqmix}
 #' }
 #'
 #' @examples
 #' out0 = lqr(formula=meas~trt+time+trt:time,data=pain,se=TRUE,R=10)
 #' @export
 
-lqr = function(formula, data, qtl=0.5, se=TRUE, R=50, verbose=TRUE, parallel=FALSE, ...){
+lqr = function(formula, data, qtl=0.5, se=TRUE, R=100, verbose=TRUE, seed=NULL, parallel=FALSE, ncores=2, ...){
 
   # ---- possible errors -----
   # ***************************
-  if(se==TRUE & is.null(R)){
-    mess = "\n The number of bootstrap samples for computing standard errors has not been specified. The default value R=50 has been used."
-  }else mess=NULL
-
+  if(is.null(data)) stop("No input dataset has been given.")
   if(!is.data.frame(data))  stop("`data' must be a data frame.")
   if(!inherits(formula, "formula") || length(formula) != 3) stop("\nFixed coefficient model must be a formula of the form \"y ~ x\".")
 
   if (qtl <= 0 | qtl >= 1) stop("Quantile level out of range")
 
-  if(verbose & length(as.logical(list(...)))==0) cat("Model homogeneous", "- qtl =", qtl,"\n")
+  opt = ("opt" %in% names(list(...)))
 
   # remove incomplete data
   names = c(unique(unlist(lapply(c(formula), all.vars))))
   asOneFormula = eval(parse(text = paste("~", paste(names, collapse = "+")))[[1]])
   data = model.frame(asOneFormula, data)
 
-  # response
-  namesY = as.character(formula)[[2]]
+  xy = xyBuildHOM(formula=formula, data=data)
 
-  # fixed model frame
-  mff = model.frame(formula, data)
-  mmf = model.matrix(formula, mff)
-
-  # variable names
-  termsFix = attr(terms(formula),"term.labels")
-  # namesFix
-  namesFix = colnames(mmf)
-
-  # fixed covariates
-  x.fixed = model.matrix(formula, mff)
-  # response variable
-  y.obs = data[,as.character(namesY)]
+  y.obs = xy$y.obs; x.fixed = xy$x.fixed
+  namesFix = xy$nameFix
   nObs = dim(x.fixed)[1]
 
   oo = lqr.fit(y=y.obs,x.fixed=x.fixed,namesFix=namesFix,qtl=qtl,nObs=nObs,verbose=verbose)
 
   see = se
   if(se){
-    if(verbose) cat("Computing standard errors ...\n")
-    if(parallel==TRUE) cl = makeCluster(2) else cl = makeCluster(1)
+    if(verbose & !opt) cat("Computing standard errors ...\n") else if(verbose & opt) cat("Computing standard errors for the optimal model...\n")
+    if(parallel==TRUE) cl = makeCluster(ncores) else cl = makeCluster(1)
     cc = 0
     registerDoSNOW(cl)
-    pb = txtProgressBar(max = R, style = 3)
-    progress = function(x) setTxtProgressBar(pb,x)
-    opts = list(progress = progress)
+    if(verbose){
+      pb = txtProgressBar(max = R, style = 3)
+      progress = function(x) setTxtProgressBar(pb,x)
+      opts = list(progress = progress)
+    }else opts = list()
 
-    ooo.se = foreach(cc = (1 : R), .options.snow = opts) %dopar%{
-    tries = 0
+    ooo.se = foreach(cc = (1 : R), .options.snow = opts) %dorng% {
+      tries = 0
+
       while(tries <= (R*10)){
         tries = tries + 1
+
         if (tries == R*10)  stop("Standard errors may not be computed.")
 
         # build the complete data matrices of size (n*T)*(?)
         pf = oo$pf
 
         # build new data matrices based on sampled units
-        set.seed(tries)
+        if(!is.null(seed)) set.seed(seed*tries*cc)# else set.seed(tries*cc)
+
         sample.unit = sample(1:nObs, nObs, replace=TRUE)
 
-        x.fix.sample = x.fixed[sample.unit,]
+        x.fix.sample = matrix(x.fixed[sample.unit,], nObs)
         y.sample = y.obs[sample.unit]
 
         colnames(x.fix.sample) = namesFix
@@ -128,6 +123,8 @@ lqr = function(formula, data, qtl=0.5, se=TRUE, R=50, verbose=TRUE, parallel=FAL
                                  namesFix=namesFix, qtl=qtl, nObs=nObs,verbose=FALSE)),error=function(e){e})
         if(!is(oo.se, "error")) break
       }
+
+
       boot = list ()
       boot$betaf = oo.se$betaf
       boot$scale = oo.se$scale
@@ -135,26 +132,35 @@ lqr = function(formula, data, qtl=0.5, se=TRUE, R=50, verbose=TRUE, parallel=FAL
       return(boot)
     }
 
-    close(pb)
+    if(verbose) close(pb)
     stopImplicitCluster()
     parallel::stopCluster(cl)
     rm(cl)
-    se = apply(sapply(ooo.se,unlist), 1, sd)
 
-    oo$se.betaf = se[grep("betaf", names(se))]
-    names(oo$se.betaf) = namesFix
+    varcov = cov(t(sapply(ooo.se,unlist)))
+    se = sqrt(diag(varcov))
+
+    wh = grep("betaf", names(se))
+    oo$se.betaf = se[wh]
+    varcov = as.matrix(varcov[wh, wh])
+    names(oo$se.betaf) = colnames(varcov) = rownames(varcov) = namesFix
+
     oo$se.scale = se[grep("scale", names(se))]
-
-
+    oo$vcov = varcov
   }
 
-  oo$pf = oo$pr = NULL
-  oo$model = "Homogeneous"
-  oo$call = match.call()
-  class(oo) <- "lqr"
+  if(!inherits(oo, "error")){
+    oo$pf = oo$pr = NULL
+    oo$model = "Homogeneous"
 
+    oo$call <- match.call()
+    oo$formula <- formula
+    oo$mmf = x.fixed
+    oo$y = y.obs
+    oo$formula = formula
+    class(oo) <- "lqr"
+
+  }
   return(oo)
-
-
 }
 

@@ -1,8 +1,4 @@
-postComputeTV_intermittent = function(A, li, delta, Gamma, fith, m, sbj.obs, time.obs, observed){
-
-  n = max(sbj.obs)
-  T = max(time.obs)
-  Ti = table(sbj.obs)
+postComputeTV_intermittent = function(A, li, delta, Gamma, fith, m, sbj.obs, time.obs, n, T, observed){
 
   time = rep(1:T, each = n)
   sbj = rep(1:n, T )

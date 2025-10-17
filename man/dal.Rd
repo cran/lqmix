@@ -2,7 +2,7 @@
 % Please edit documentation in R/dal.R
 \name{dal}
 \alias{dal}
-\title{Density of the Asymmetric Laplace distribution}
+\title{Density of the Asymmetric Laplace Distribution}
 \usage{
 dal(y, mu = 0, sigma = 1, qtl = 0.5, log = FALSE)
 }
@@ -18,14 +18,14 @@ dal(y, mu = 0, sigma = 1, qtl = 0.5, log = FALSE)
 \item{log}{logical; if TRUE, probabilities are log-transformed}
 }
 \value{
-Return the density for the asymmetric Laplace distribution
+Return the density for the Asymmetric Laplace Distribution.
 }
 \description{
-Compute the density for the three parameter Asymmetric Laplace Distribution
+Compute the density for the three parameter Asymmetric Laplace Distribution.
 }
 \details{
 The function computes the density of the Asymmetric Laplace distribution, with location \eqn{\mu}, scale \eqn{\sigma > 0}
-and skewness \code{qtl = q} in (0,1), as discussed by Koenker and Machado (1999) and Yu and Moyeed (2001), according to the following expression
+and skewness \code{qtl = q}  in (0,1), as discussed by Koenker and Machado (1999) and Yu and Moyeed (2001), according to the following expression
 
 \deqn{f(y | \mu, \sigma, q) = \frac{q(1-q)}{\sigma} \exp(-\rho_{q} (\frac{y-\mu}{\sigma}))}
 }
@@ -36,5 +36,9 @@ and skewness \code{qtl = q} in (0,1), as discussed by Koenker and Machado (1999)
 
 {
   \insertRef{ref:dal2}{lqmix}
+}
+
+{
+  \insertRef{ref:dal3}{lqmix}
 }
 }

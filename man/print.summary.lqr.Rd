@@ -14,8 +14,8 @@
 \item{...}{not used}
 }
 \value{
-Return a summary of an \code{lqr} object
+Return a summary of an \code{\link{lqr}} object.
 }
 \description{
-Print the summary of an an object of \code{\link{class}} \code{lqr}
+Print the summary of an an object of \code{\link{class}} \code{\link{lqr}}.
 }

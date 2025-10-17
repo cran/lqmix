@@ -12,8 +12,8 @@
 \item{\dots}{not used}
 }
 \value{
-Return an object of \code{\link{class}} \code{logLik} providing the log-likelihood for a fitted model of \code{\link{class}} \code{lqr}
+Return an object of \code{\link{class}} \code{logLik} providing the log-likelihood for a fitted model of \code{\link{class}} \code{\link{lqr}}.
 }
 \description{
-Print the log-likelihood of a fitted model of \code{\link{class}} \code{lqr}
+Print the log-likelihood of a fitted model of \code{\link{class}} \code{\link{lqr}}.
 }

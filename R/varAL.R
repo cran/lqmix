@@ -1,12 +1,22 @@
 #' Variance of Asymmetric Laplace random variables
 #'
-#' Compute the variance for the asymmetric Laplace distribution
+#' Compute the variance for the asymmetric Laplace Distribution.
 #'
 #' @param sigma scale parameter
 #' @param qtl skewness parameter
 #'
-#' @return Return the variance of Asymmetric Laplace random variables for given scale (\code{sigma}) and skewness (\code{qtl}) parameters
+#' @return Return the variance of Asymmetric Laplace random variables for given scale (\code{sigma}) and skewness (\code{qtl}) parameters.
 #'
+#' @references{
+#'   \insertRef{ref:dal1}{lqmix}
+#' }
+#' @references{
+#'   \insertRef{ref:dal2}{lqmix}
+#' }
+#'
+#' @references{
+#'   \insertRef{ref:dal3}{lqmix}
+#' }
 #' @export
 
 

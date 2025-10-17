@@ -1,4 +1,4 @@
-lqmixTCTV = function(formula, randomTC, randomTV, group, time, m, G, data, qtl=0.5, eps=10^-5, maxit=1000, se=TRUE, R=50, start=0, parInit = list(betaf=NULL,  betarTC=NULL, betarTV=NULL, pg=NULL, delta = NULL, Gamma = NULL, scale=NULL),verbose=TRUE, seed=NULL, parallel=parallel, ...){
+lqmixTCTV = function(formula, randomTC, randomTV, group, time, m, G, data, qtl=0.5, eps=10^-5, maxit=1000, se=TRUE, R=200, start=0, parInit = list(betaf=NULL,  betarTC=NULL, betarTV=NULL, pg=NULL, delta = NULL, Gamma = NULL, scale=NULL),verbose=TRUE, seed=NULL, parallel=parallel, ncores=2, ...){
 
   # start = 0 -- deterministic start
   # start = 1 -- random start
@@ -8,39 +8,37 @@ lqmixTCTV = function(formula, randomTC, randomTV, group, time, m, G, data, qtl=0
   # ***************************
 
   if(start == 2 & is.null(unlist(parInit))) stop("No input parameters have been given with start = 2.")
-
   if (qtl <= 0 | qtl >= 1) stop("Quantile level out of range")
 
   # ---- initial settings ----
   # ***************************
-  if(!is.data.frame(data))  stop("`data' must be a data frame.")
 
   if(!inherits(formula, "formula") || length(formula) != 3) stop("\nFixed coefficient model must be a formula of the form \"y ~ x\".")
   if(!inherits(randomTV, "formula") || length(randomTV) != 2) stop("\nTV random coefficient model must be a formula of the form \"~ w\".")
   if (!inherits(randomTC, "formula") || length(randomTC) != 2) stop("\nTC random coefficient model must be a formula of the form \"~ z\".")
+  if (qtl <= 0 | qtl >= 1) stop("Quantile level out of range")
 
   if(m == 1 & G == 1) stop("The specified model corresponds to a linear quantile regression model with no random coefficients. Please, use the function lqr().")
-  else if(m == 1) stop("The specified model corresponds to a linear quantile mixture with TC random coefficients only. Please, use the function lqmixTC().")
-  else if(G == 1) stop("The specified model corresponds to a linear quantile mixture with TV random coefficients only. Please, use the function lqmixTV().")
 
+
+  opt = ("opt" %in% names(list(...)))
 
   ranIntTC = length(grep("1", randomTC))>0
   ranIntTV = length(grep("1", randomTV))>0
 
   mformt = as.character(time)
   mform2time = gsub(" ", "", mformt)
-
   mformTC = strsplit(as.character(randomTC)[2], "\\|")[[1]]
   mformTC = gsub(" ", "", mformTC)
   formula.rTC = reformulate(mformTC[1], intercept = ranIntTC) # random formula terms
-  mform2sbjTC = group # id variable
 
   mformTV = strsplit(as.character(randomTV)[2], "\\|")[[1]]
   mformTV = gsub(" ", "", mformTV)
   formula.rTV = reformulate(mformTV[1], intercept = ranIntTV) # random formula terms
-  mform2sbjTV = group # id variable
 
-  if (!(all(mform2sbjTC %in% names(data)))) stop("The specified clustering variable is not contained in the data frame.")
+  mform2sbj = group # id variable
+
+  if (!(all(mform2sbj %in% names(data)))) stop("The specified grouping variable is not contained in the data frame.")
   if (!(all(mform2time %in% names(data)))) stop("The specified time variable is not contained in the data frame.")
 
   randomTermsTC = attr(terms(formula.rTC), "intercept") + length(attr(terms(formula.rTC),"term.labels"))>0
@@ -54,100 +52,18 @@ lqmixTCTV = function(formula, randomTC, randomTV, group, time, m, G, data, qtl=0
   # ---- initial settings ----
   # ***************************
   # remove incomplete data
-  names = c(unique(unlist(lapply(c(formula, formula.rTC, formula.rTV), all.vars))), mform2sbjTC, mform2time)
+  names = c(unique(unlist(lapply(c(formula, formula.rTC, formula.rTV), all.vars))), mform2sbj, mform2time)
   asOneFormula = eval(parse(text = paste("~", paste(names, collapse = "+")))[[1]])
   data = model.frame(asOneFormula, data)
 
-  # response
-  namesY = formula[[2]]
-
-  # define fixed and random model frames and matrices
-  # fixed model frame
-  mff = model.frame(formula, data)
-  # random model frame TC
-  mfrTC = model.frame(formula.rTC, data)
-  # random model matrix TC
-  mmrTC = model.matrix(formula.rTC, mfrTC)
-  # random model frame TV
-  mfrTV = model.frame(formula.rTV, data)
-  # random model matrix TV
-  mmrTV = model.matrix(formula.rTV, mfrTV)
-
-  # intercept derived from the formula
-  fixInt = attr(terms(mff), "intercept") == 1
-  ranIntTC = attr(terms(mfrTC), "intercept") == 1
-  ranIntTV = attr(terms(mfrTV), "intercept") == 1
-
-  # terms specified as both TC and TV -- error
-  randomTermsTC = c(ranIntTC*1, attr(terms(formula.rTC),"term.labels"))
-  randomTermsTV = c(ranIntTV*1, attr(terms(formula.rTV),"term.labels"))
-
-  wh = intersect(randomTermsTC, randomTermsTV)
-  if(length(wh)>0) stop(paste("One or more terms are specified as both TC and TV random coefficients:", paste(wh, collapse=", ")))
-
-  # if random intercept, remove it from fixed formula
-  if((ranIntTC == 1 | ranIntTV == 1) & fixInt == 1) fixInt = 0
-
-  # identify the type of intercept: 0 -> fixed, 1 -> random TC, 2 -> TV, 999 -> no intercept in the model
-  ranInt = 999  # Default value
-  if (ranIntTC == 1 & fixInt == 0) ranInt = 1 else if (ranIntTV == 1 & fixInt == 0) ranInt = 2 else if (ranIntTC == 0 & ranIntTV == 0 & fixInt == 1) ranInt = 0
-
-
-  # ranInt = ifelse(ranIntTC == 1 & fixInt == 0, 1,
-  #                 ifelse(ranIntTV == 1 & fixInt == 0, 2,
-  #                 ifelse(ranIntTC == 0 & ranIntTV == 0 & fixInt == 1, 0, 999)))
-
-  # variable names
-  termsFix = attr(terms(formula),"term.labels")
-  termsRanTC = attr(terms(formula.rTC),"term.labels")
-  termsRanTV = attr(terms(formula.rTV),"term.labels")
-
-  # slopes in common between random and fixed model formula
-  termsFix = setdiff(termsFix, termsRanTC)
-
-  # wh = which(termsFix %in% c(termsRanTC, termsRanTV))
-  # if(length(wh)>0) termsFix = termsFix[-wh]
-
-  # any fixed slope? + reformulate the fixed model formula
-  fixed = FALSE
-
-  if(length(termsFix)>0){
-    formula = reformulate(termsFix, response=as.character(formula[2]))
-    fixed = TRUE
-    mmf = model.matrix(formula, mff)
-    if(!fixInt) mmf = mmf[, -1, drop = FALSE]
-    # if(! as.logical(fixInt)){
-    #   mmf = as.matrix(mmf[,-1])
-    #   namesFix = attr(mmf0, "dimnames")[[2]][-1]
-    #   colnames(mmf) = namesFix
-    #   fixed = TRUE
-    # }
-    # fixed = TRUE
-  }else if(fixInt){
-    formula = reformulate("1", response = as.character(formula[2]))
-    mmf = model.matrix(formula, mff)
-    fixed = TRUE
-  } else formula = mmf0 = mmf = NULL
-  namesFix = colnames(mmf)
-
-  # any random slope?
-  ranSlopeTC = length(termsRanTC) > 0
-  # ranSlopeTC = FALSE
-  # if(length(termsRanTC>0)) ranSlopeTC = 1
-
-  ranSlopeTV = length(termsRanTV) > 0
-  # ranSlopeTV = FALSE
-  # if(length(termsRanTV>0)) ranSlopeTV = 1
-
-  #if(! as.logical(fixInt)) namesFix = colnames(mmf0)[-1] else namesFix = colnames(mmf0)
-  namesRanTC = colnames(mmrTC)
-  namesRanTV = colnames(mmrTV)
-
   # ordering the dataset
-  sbj.obs = data[,mform2sbjTV]
+  origOrder = row.names(data)
+  sbj.obs = data[,mform2sbj]
+  origOrder.sbj = unique(sbj.obs)
+
   ord = order(sbj.obs)
   data = data[ord,]
-  sbj.obs = as.factor(data[,mform2sbjTV])
+  sbj.obs = as.factor(data[,mform2sbj])
   n = length(unique(sbj.obs))
   levels(sbj.obs) = 1:n
   sbj.obs = as.numeric(sbj.obs)
@@ -174,7 +90,6 @@ lqmixTCTV = function(formula, randomTC, randomTV, group, time, m, G, data, qtl=0
 
   # order data wrt to time
   # n*T object
-  order.time = order(time)
   time = time[order.time]
   sbj = sbj[order.time]
   observed = observed[order.time]
@@ -182,19 +97,22 @@ lqmixTCTV = function(formula, randomTC, randomTV, group, time, m, G, data, qtl=0
   # nObs objects
   order.time = order(time.obs)
   data = data[order.time,]
-  time.obs = time.obs[order.time]
-  sbj.obs = sbj.obs[order.time]
+  time.obs = as.factor(data[,mform2time])
+  sbj.obs = as.factor(data[,mform2sbj])
+  revOrder = match(origOrder, row.names(data))
+  revOrder.sbj = match(origOrder.sbj, unique(sbj.obs))
+  levels(sbj.obs) = 1:n
+  levels(time.obs) = 1:T
+  time.obs = as.numeric(time.obs)
 
+  # build response and design matrices
+  xy = xyBuildTCTV(formula=formula, randomTC=formula.rTC, randomTV=formula.rTV, data=data)
 
-  # prepare covariates and response
-  # *******************************
-  # random covariates
-  mfrTC = model.frame(formula.rTC, data)
-  x.randomTC = model.matrix(formula.rTC, mfrTC)
+  y.obs = xy$y.obs; x.fixed = xy$x.fixed; x.randomTC = xy$x.randomTC; x.randomTV=xy$x.randomTV
+  namesFix = xy$nameFix; namesRanTC= xy$namesRanTC; namesRanTV=xy$namesRanTV
+  fixed = xy$fixed; fixInt = xy$fixInt; ranInt = xy$ranInt; ranSlopeTC = xy$ranSlopeTC; ranSlopeTV=xy$ranSlopeTV
 
-  mfrTV = model.frame(formula.rTV, data)
-  x.randomTV = model.matrix(formula.rTV, mfrTV)
-
+  #check whether TV random coefficients are associated to TC covariates. Else error
   if(ranSlopeTV){
     TVcovar = function(cov, sbj){
       any(!tapply(cov, sbj.obs, function(x) all(x == x[1])))
@@ -204,17 +122,7 @@ lqmixTCTV = function(formula, randomTC, randomTV, group, time, m, G, data, qtl=0
     if(any(checkTVcovar)) stop(paste("TV random coefficients are only admitted for TC covariates."))
   }
 
-  # fixed covariates
-  if(!is.null(formula)){
-    mff = model.frame(formula, data)
-    x.fixed = model.matrix(formula, mff)
-    if(!fixInt) x.fixed = x.fixed[, -1, drop = FALSE]
-  }else x.fixed = NULL
-
-  # response variable
-  y.obs = model.response(mff)
-
-  if(!("opt" %in% names(list(...)))) {
+  if(!opt) {
     oo = lqmixTCTV.fit(y=y.obs, x.fixed=x.fixed, namesFix=namesFix,
                        x.randomTC=x.randomTC, namesRanTC=namesRanTC,
                        x.randomTV=x.randomTV, namesRanTV=namesRanTV,
@@ -225,24 +133,25 @@ lqmixTCTV = function(formula, randomTC, randomTV, group, time, m, G, data, qtl=0
     see = se
 
     if(se){
-      if(verbose) cat("Computing standard errors ...\n")
+      if(verbose & !opt) cat("Computing standard errors ...\n") else if(verbose & opt) cat("Computing standard errors for the optimal model...\n")
 
       # number of parameters
       if(fixed | fixInt) pf = ncol(x.fixed) else pf = 0
       prTC = ncol(x.randomTC)
       prTV = ncol(x.randomTV)
 
-      if(parallel==TRUE) cl = makeCluster(2) else cl = makeCluster(1)
-      #registerDoParallel(cl)
+      if(parallel==TRUE) cl = makeCluster(ncores) else cl = makeCluster(1)
+
       cc=0
       registerDoSNOW(cl)
-      pb = txtProgressBar(max = R, style = 3)
-      progress = function(x) setTxtProgressBar(pb,x)
-      opts = list(progress = progress)
+      if(verbose){
+        pb = txtProgressBar(max = R, style = 3)
+        progress = function(x) setTxtProgressBar(pb,x)
+        opts = list(progress = progress)
+      }else opts = list()
+      if(!is.null(seed)) set.seed(seed)
 
-      ooo.se = foreach(cc = (1 : R), .options.snow = opts) %dopar%{
-      #ooo.se = foreach(cc = (1 : R)) %dopar%{
-
+      ooo.se = foreach(cc = (1 : R), .options.snow = opts) %dorng% {
         stopImplicitCluster()
         tries = 0
         while(tries <= (R*10)){
@@ -262,7 +171,6 @@ lqmixTCTV = function(formula, randomTC, randomTV, group, time, m, G, data, qtl=0
           yy[observed] = y.obs
 
           # build new data matrices based on sampled units
-          if(!is.null(seed)) set.seed(seed*tries*cc) else set.seed(tries*cc)
           sample.unit = sample(1:n, n, replace=TRUE)
           whTmax = tapply(time.obs, sbj.obs, max)
           Ti.sample = Ti[sample.unit]
@@ -323,23 +231,34 @@ lqmixTCTV = function(formula, randomTC, randomTV, group, time, m, G, data, qtl=0
 
         return(boot)
       }
-      close(pb)
+      if(verbose) close(pb)
       stopImplicitCluster()
       parallel::stopCluster(cl)
       rm(cl)
 
-      se = apply(sapply(ooo.se,unlist), 1, sd)
-
+      vc = cov(t(sapply(ooo.se,unlist)))
+      se = sqrt(diag(vc))
+      varcov = list()
       if(fixed | fixInt){
-        oo$se.betaf = se[grep("betaf", names(se))]
-        names(oo$se.betaf) = namesFix
+        wh = grep("betaf", names(se))
+        oo$se.betaf = se[wh]
+        varcov$betaf = as.matrix(vc[wh, wh])
+        names(oo$se.betaf) = colnames(varcov$betaf) = rownames(varcov$betaf) = namesFix
       }
 
-      oo$se.betarTC = matrix(se[grep("betarTC", names(se))], nrow = G)
+      wh = grep("betarTC", names(se))
+      oo$se.betarTC = matrix(se[wh], nrow = G)
+      varcov$betarTC  = as.matrix(vc[wh, wh])
+      colnames(varcov$betarTC) = rownames(varcov$betarTC) = c(sapply(namesRanTC, function(xx) paste(xx, paste("Comp", 1:G, sep=""), sep="_")))
+
       colnames(oo$se.betarTC) = namesRanTC
       rownames(oo$se.betarTC) = paste("Comp", 1:G, sep="")
 
-      oo$se.betarTV = matrix(se[grep("betarTV", names(se))], nrow = m)
+      wh = grep("betarTV", names(se))
+      oo$se.betarTV = matrix(se[wh], nrow = m)
+      varcov$betarTV  = as.matrix(vc[wh, wh])
+      colnames(varcov$betarTV) = rownames(varcov$betarTV) = c(sapply(namesRanTV, function(xx) paste(xx, paste("St", 1:m, sep=""), sep="_")))
+
       colnames(oo$se.betarTV) = namesRanTV
       rownames(oo$se.betarTV) = paste("St", 1:m, sep="")
 
@@ -352,17 +271,13 @@ lqmixTCTV = function(formula, randomTC, randomTV, group, time, m, G, data, qtl=0
       names(oo$se.pg) = paste("Comp", 1:G, sep="")
       oo$se.scale = se[grep("scale", names(se))]
       cat("\n")
+
+      oo$vcov = varcov
     }
 
     if(any(Ti != T)){
       if((any(time.input != timeidx))) oo$miss = "non-monotone" else oo$miss = "monotone"
-      #
-      # {
-      #
-      #   if(verbose){
-      #     message("\nData affected by non-monotone missingness: parameter estimates may be biased.")
-      #    }
-      # }
+
     }else oo$miss = "none"
 
     oo$prTC = oo$prTC = NULL
@@ -371,9 +286,26 @@ lqmixTCTV = function(formula, randomTC, randomTV, group, time, m, G, data, qtl=0
     oo$model ="TCTV"
 
     oo$call = match.call()
+    if(fixed | fixInt){
+      oo$mmf = as.matrix(x.fixed[revOrder,])
+      colnames(oo$mmf) = namesFix
+    }
+    oo$mmrTC = as.matrix(x.randomTC[revOrder,])
+    colnames(oo$mmrTC) = namesRanTC
+    oo$mmrTV = as.matrix(x.randomTV[revOrder,])
+    colnames(oo$mmrTV) = namesRanTV
+
+    oo$y = y.obs[revOrder]
+
+
+    oo$postTC = as.matrix(oo$postTC[revOrder.sbj,])
+    rownames(oo$postTC) = origOrder.sbj
+
+    oo$postTV = as.matrix(oo$postTV[revOrder.sbj,])
+    rownames(oo$postTV) = origOrder.sbj
+
     class(oo) = "lqmix"
 
-    #message(mess)
     return(oo)
 }
 

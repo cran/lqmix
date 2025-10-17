@@ -9,7 +9,7 @@ lqr.fit = function(y,x.fixed,namesFix,qtl,nObs,verbose){
 
   # ---- parameter estimation ----
   # ***********************************
-  mod0 = suppressWarnings(rq(y ~ .-1, data = data.frame(x.fixed)))
+  mod0 = suppressWarnings(rq(y ~ .-1, data = data.frame(x.fixed), tau  = qtl))
 
   # estimated fixed coefficients
   betaf = mod0$coefficients

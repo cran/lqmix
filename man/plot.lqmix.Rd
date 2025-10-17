@@ -2,15 +2,15 @@
 % Please edit documentation in R/plot.lqmix.R
 \name{plot.lqmix}
 \alias{plot.lqmix}
-\title{Plots for lqmix objects}
+\title{Plots for \code{lqmix} objects}
 \usage{
 \method{plot}{lqmix}(x, ...)
 }
 \arguments{
-\item{x}{an object of class \link{search_lqmix}}
+\item{x}{an object of class \code{lqmix}}
 
 \item{\dots}{not used}
 }
 \description{
-Graphically display component and/or transition probabilities of a fitted model of \code{\link{class}} \code{lqmix}
+Graphically display component and/or transition probabilities of a fitted model of \code{\link{class}} \code{\link{lqmix}}.
 }

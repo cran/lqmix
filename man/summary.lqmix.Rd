@@ -9,10 +9,10 @@
 \arguments{
 \item{object}{an \code{lqmix} object}
 
-\item{...}{not used}
+\item{\dots}{not used}
 }
 \value{
-Return an object of \code{\link{class}} \code{summary.lqmix}.
+Return an object of \code{class} \code{summary.lqmix}.
 This is a list of summary statistics for the fitted linear quantile mixture model given in \code{object}, with the following elements:
 \item{fix}{a matrix with estimates, standard errors, Z statistics, and p-values for the fixed regression coefficients}
 \item{ranTC}{a matrix with estimates, standard errors, Z statistics, and p-values for the TC random coefficients (if present)}
@@ -27,8 +27,8 @@ This is a list of summary statistics for the fitted linear quantile mixture mode
 \item{AIC}{the AIC value}
 \item{BIC}{the BIC value}
 \item{qtl}{the estimated quantile}
-\item{G}{the number of mixture components associated to TC random coefficients (if present)}
-\item{m}{the number of hidden states associated to TV random coefficients (if present)}
+\item{G}{the number of mixture components associated to TC random coefficients, if present in the model}
+\item{m}{the number of hidden states associated to TV random coefficients, if present in the model}
 \item{nsbj}{the number of subjects}
 \item{nobs}{the total number of observations}
 \item{miss}{the missingness type}
@@ -36,5 +36,5 @@ This is a list of summary statistics for the fitted linear quantile mixture mode
 \item{call}{the matched call}
 }
 \description{
-Summary method for the \code{\link{class}} \code{lqmix}
+Summary method for the \code{\link{class}} \code{\link{lqmix}}.
 }

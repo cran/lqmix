@@ -1,10 +1,6 @@
 lqmixTCTV.fit = function(y, x.fixed, namesFix, x.randomTC,x.randomTV, namesRanTC, namesRanTV, sbj.obs, time.obs, observed, m,G, qtl, n, T, Ti, nObs,
                          order.time, ranInt, ranSlopeTC,ranSlopeTV, fixed, start,eps, maxit, parInit, verbose=TRUE,seed=NULL){
 
-
-  # initial settings
-  # ****************
-
   # initial settings
   # ****************
   namesFix = gsub(":", ".", namesFix)
@@ -41,8 +37,6 @@ lqmixTCTV.fit = function(y, x.fixed, namesFix, x.randomTC,x.randomTV, namesRanTC
     # deterministic start for parameters related to latent variables
     sumMod0TC = matrix(suppressWarnings(summary(mod0TC)$coef[1:prTC,]),nrow = prTC)
     sumMod0TV = matrix(suppressWarnings(summary(mod0TV)$coef[1:prTV,]),nrow = prTV)
-    # sumMod0TC = suppressWarnings(summary(mod0TC)$coef)
-    # sumMod0TV = suppressWarnings(summary(mod0TV)$coef)
 
     tmp = matrix(cbind(sumMod0TC[,1] - 2 * sumMod0TC[,2], sumMod0TC[,1] + 2 * sumMod0TC[,2]), ncol=2)
     betarTC = matrix(apply(tmp, 1, function(xx){seq(xx[1],xx[2], length = G)}), nrow = G) # matrix of size (G*prTV)
@@ -67,14 +61,14 @@ lqmixTCTV.fit = function(y, x.fixed, namesFix, x.randomTC,x.randomTV, namesRanTC
   }else if(start == 1){
     if(!is.null(seed)) set.seed(seed)
 
-    betarTC = matrix(sapply(mod0TC$coef[1:prTC], function(xx){sort(xx + rnorm(G,0,1))}), nrow = G)
+    betarTC = matrix(sapply(mod0TC$coef[1:prTC], function(xx){sort(xx + rnorm(G,0,2))}), nrow = G)
     colnames(betarTC) = namesRanTC
 
-    betarTV = matrix(sapply(mod0TV$coef[1:prTV], function(xx){sort(xx + rnorm(m,0,1))}), nrow = m)
+    betarTV = matrix(sapply(mod0TV$coef[1:prTV], function(xx){sort(xx + rnorm(m,0,2))}), nrow = m)
     colnames(betarTV) = namesRanTV
 
     delta = rep(1/m, m)
-    num.delta = abs(delta + rnorm(m, 0, 0.4))
+    num.delta = abs(delta + rnorm(m, 0, 1))
     delta = num.delta / sum(num.delta)
 
     s1 = abs(9*rnorm(1))

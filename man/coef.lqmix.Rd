@@ -2,7 +2,7 @@
 % Please edit documentation in R/coef.lqmix.R
 \name{coef.lqmix}
 \alias{coef.lqmix}
-\title{Print the estimated fixed coefficients of an \code{lqmix} object}
+\title{Print the estimated coefficients of an \code{lqmix} object}
 \usage{
 \method{coef}{lqmix}(object, ...)
 }
@@ -12,8 +12,8 @@
 \item{\dots}{not used}
 }
 \value{
-Return the estimated fixed coefficients obtained at convergence of the EM algorithm for a fitted model of \code{\link{class}} \code{lqmix}
+Return the estimated coefficients in the longitudinal data model obtained at convergence of the EM algorithm for a fitted model of \code{\link{class}} \code{\link{lqmix}}.
 }
 \description{
-Print the estimated fixed coefficients of a fitted model of \code{\link{class}} \code{lqmix}
+Print the estimated coefficients of a fitted model stored in an object of \code{\link{class}} \code{\link{lqmix}}.
 }

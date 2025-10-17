@@ -12,7 +12,7 @@
 \item{...}{not used}
 }
 \value{
-Return an object of \code{\link{class}} \code{summary.lqr}.
+Return an object of \code{class} \code{summary.lqr}.
 This is a list of summary statistics for the fitted linear quantile regression model given in \code{object}, with the following elements:
 
 \item{fix}{a matrix with estimates, standard errors, Z statistics, and p-values for the regression coefficients}
@@ -28,5 +28,5 @@ This is a list of summary statistics for the fitted linear quantile regression m
 \item{call}{the matched call}
 }
 \description{
-Summary method for the \code{\link{class}} \code{lqr}
+Summary method for the \code{\link{class}} \code{\link{lqr}}.
 }

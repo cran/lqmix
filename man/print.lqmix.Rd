@@ -14,8 +14,8 @@
 \item{...}{not used}
 }
 \value{
-Return an \code{lqmix} object
+Return an \code{\link{lqmix}} object.
 }
 \description{
-Print an object of \code{\link{class}} \code{lqmix}
+Print an object of \code{\link{class}} \code{\link{lqmix}}.
 }

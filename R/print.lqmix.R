@@ -1,12 +1,12 @@
 #' Print an \code{lqmix} object
 #'
-#' Print an object of \code{\link{class}} \code{lqmix}
+#' Print an object of \code{\link{class}} \code{\link{lqmix}}.
 #'
 #' @param x an \code{lqmix} object
 #' @param digits a non-null value for digits specifying the minimum number of significant digits to be printed
 #' @param ... not used
 #'
-#' @return Return an \code{lqmix} object
+#' @return Return an \code{\link{lqmix}} object.
 #'
 #' @export
 

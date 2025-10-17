@@ -4,13 +4,13 @@
 \alias{lqr}
 \title{Linear Quantile Regression}
 \usage{
-lqr(formula, data, qtl = 0.5, se = TRUE, R = 50, verbose = TRUE,
-  parallel = FALSE, ...)
+lqr(formula, data, qtl = 0.5, se = TRUE, R = 100, verbose = TRUE,
+  seed = NULL, parallel = FALSE, ncores = 2, ...)
 }
 \arguments{
-\item{formula}{an object of class \code{\link{formula}}: a symbolic description of the model to be fitted}
+\item{formula}{an object of class \code{formula}: a symbolic description of the model to be fitted}
 
-\item{data}{a data frame containing the variables named in \code{formula} and \code{time}}
+\item{data}{a data frame containing the variables named in \code{formula}}
 
 \item{qtl}{quantile to be estimated}
 
@@ -20,12 +20,16 @@ lqr(formula, data, qtl = 0.5, se = TRUE, R = 50, verbose = TRUE,
 
 \item{verbose}{if set to FALSE, no printed output is given during the function execution}
 
+\item{seed}{an integer value for random numbers generation, used for bootstrap standard errors}
+
 \item{parallel}{if set to TRUE, a parallelized code is use for standard error computation (if se=TRUE)}
 
-\item{...}{further arguments to be passed to or from methods}
+\item{ncores}{number of cores used for computing bootstrap standard errors (if required)}
+
+\item{...}{not used}
 }
 \value{
-Return an object of \code{\link{class}} \code{lqr}. This is a list containing the following elements:
+Return an object of \code{class} \code{lqr}. This is a list containing the following elements:
 \item{betaf}{a vector containing fixed regression coefficients}
 \item{scale}{the scale parameter}
 \item{sigma.e}{the standard deviation of error terms}
@@ -35,13 +39,16 @@ Return an object of \code{\link{class}} \code{lqr}. This is a list containing th
 \item{BIC}{the BIC value}
 \item{qtl}{the estimated quantile}
 \item{nobs}{the total number of observations}
-\item{se.betaf}{the standard errors for fixed regression coefficients}
+\item{se.betaf}{the standard errors for the regression coefficients}
 \item{se.scale}{the standard error for the scale parameter}
 \item{model}{the estimated model}
+\item{mmf}{the model matrix associated to the regression coefficients}
+\item{y}{the model response}
 \item{call}{the matched call}
+\item{formula}{the model formula}
 }
 \description{
-Estimate a linear quantile regression model with no random coefficients
+Estimate a linear quantile regression model for independent data (no random coefficients).
 }
 \details{
 The function computes ML estimates for the parameters of a linear quantile regression model for independent observations.
@@ -55,6 +62,6 @@ out0 = lqr(formula=meas~trt+time+trt:time,data=pain,se=TRUE,R=10)
 }
 \references{
 {
-  \insertRef{ref:lqr}{lqmix}
+  \insertRef{ref:KoeBas}{lqmix}
 }
 }

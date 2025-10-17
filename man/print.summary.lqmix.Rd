@@ -15,8 +15,8 @@
 \item{...}{not used}
 }
 \value{
-Return a summary of an \code{lqmix} object
+Return a summary of an \code{\link{lqmix}} object.
 }
 \description{
-Print the summary of an object of \code{\link{class}} \code{lqmix}
+Print the summary of an object of \code{\link{class}} \code{\link{lqmix}}.
 }

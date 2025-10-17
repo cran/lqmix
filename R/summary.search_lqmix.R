@@ -1,19 +1,19 @@
-#' Summary of a \code{search_lqmix} opt
+#' Summary of a \code{search_lqmix} object
 #'
-#' Summary method for the \code{\link{class}} \code{search_lqmix}
+#' Summary method for the \code{\link{class}} \code{\link{search_lqmix}}.
 #'
 #'
-#' @param object a \code{search_lqmix} opt
+#' @param object a \code{search_lqmix} object
 #' @param ... not used
 #'
-#' @return Return an opt of \code{\link{class}} \code{summary.search_lqmix}.
-#' This is a list of summary statistics for the optimal linear quantile mixture model given in \code{opt}, with the following elements:
-#' \item{fix}{a matrix with estimates, standard errors, Z statistics, and p-values for the fixed regression coefficients for the optimal model}
-#' \item{ranTC}{a matrix with estimates, standard errors, Z statistics, and p-values for the TC random coefficients (if present) for the optimal model}
-#' \item{ranTV}{a matrix with estimates, standard errors, Z statistics, and p-values for the TV random coefficients (if present) for the optimal model}
-#' \item{pg}{a matrix with estimates and standard errors for the prior probabilities of the finite mixture associated to TC random coefficients (if present) for the optimal model}
-#' \item{delta}{a matrix with estimates and standard errors for the initial probabilities of the hidden Markov chain associated to TV random coefficients (if present) for the optimal model}
-#' \item{Gamma}{a matrix with estimates and standard errors for the transition probabilities of the hidden Markov chain associated to TV random coefficients (if present) for the optimal model}
+#' @return Return an object of \code{\link{class}} \code{summary.search_lqmix}.
+#' This is a list of summary statistics for the optimal linear quantile mixture model given in \code{object$optimal}, with the following elements:
+#' \item{fix}{a matrix with estimates, standard errors, Z statistics, and p-values for the fixed regression coefficients for the optimal fitted model}
+#' \item{ranTC}{a matrix with estimates, standard errors, Z statistics, and p-values for the TC random coefficients, if present for the optimal fitted model}
+#' \item{ranTV}{a matrix with estimates, standard errors, Z statistics, and p-values for the TV random coefficients, if present for the optimal fitted model}
+#' \item{pg}{a matrix with estimates and standard errors for the prior probabilities of the finite mixture associated to TC random coefficients, if present for the optimal fitted model}
+#' \item{delta}{a matrix with estimates and standard errors for the initial probabilities of the hidden Markov chain associated to TV random coefficients, if present for the optimal fitted model}
+#' \item{Gamma}{a matrix with estimates and standard errors for the transition probabilities of the hidden Markov chain associated to TV random coefficients, if present for the optimal fitted model}
 #' \item{scale}{the scale parameter for the optimal model}
 #' \item{sigma.e}{the standard deviation of error terms for the optimal model}
 #' \item{logLik}{the log-likelihood at convergence of the EM algorithm for the optimal model}
@@ -21,8 +21,8 @@
 #' \item{AIC}{the AIC value for the optimal model}
 #' \item{BIC}{the BIC value for the optimal model}
 #' \item{qtl}{the estimated quantile}
-#' \item{G}{the number of mixture components associated to TC random coefficients (if present) for the optimal model}
-#' \item{m}{the number of hidden states associated to TV random coefficients (if present) for the optimal model}
+#' \item{G}{the number of mixture components associated to TC random coefficients, if present for the optimal fitted model}
+#' \item{m}{the number of hidden states associated to TV random coefficients, if present for the optimal fitted model}
 #' \item{nsbj}{the number of subjects}
 #' \item{nobs}{the total number of observations}
 #' \item{miss}{the missingness type}

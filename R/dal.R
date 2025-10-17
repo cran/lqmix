@@ -1,6 +1,6 @@
-#' Density of the Asymmetric Laplace distribution
+#' Density of the Asymmetric Laplace Distribution
 #'
-#' Compute the density for the three parameter Asymmetric Laplace Distribution
+#' Compute the density for the three parameter Asymmetric Laplace Distribution.
 #'
 #' @param y vector of quantiles
 #' @param mu location parameter
@@ -8,19 +8,24 @@
 #' @param qtl skewness parameter
 #' @param log logical; if TRUE, probabilities are log-transformed
 #'
-#' @return Return the density for the asymmetric Laplace distribution
+#' @return Return the density for the Asymmetric Laplace Distribution.
 #'
 #' @details
 #' The function computes the density of the Asymmetric Laplace distribution, with location \eqn{\mu}, scale \eqn{\sigma > 0}
-#' and skewness \code{qtl = q} in (0,1), as discussed by Koenker and Machado (1999) and Yu and Moyeed (2001), according to the following expression
+#' and skewness \code{qtl = q}  in (0,1), as discussed by Koenker and Machado (1999) and Yu and Moyeed (2001), according to the following expression
 #'
 #' \deqn{f(y | \mu, \sigma, q) = \frac{q(1-q)}{\sigma} \exp(-\rho_{q} (\frac{y-\mu}{\sigma}))}
+#'
 #'
 #' @references{
 #'   \insertRef{ref:dal1}{lqmix}
 #' }
 #' @references{
 #'   \insertRef{ref:dal2}{lqmix}
+#' }
+#'
+#' @references{
+#'   \insertRef{ref:dal3}{lqmix}
 #' }
 #'
 #' @export

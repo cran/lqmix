@@ -1,13 +1,13 @@
 #' Print an \code{lqr} object
 #'
-#' Print an object of \code{\link{class}} \code{lqr}
+#' Print an object of \code{\link{class}} \code{\link{lqr}}.
 #'
 #'
 #' @param x an \code{lqr} object
 #' @param digits a non-null value for digits specifying the minimum number of significant digits to be printed
 #' @param ... not used
 #'
-#' @return Return an \code{lqr} object
+#' @return Return an \code{\link{lqr}} object.
 #'
 #' @export
 

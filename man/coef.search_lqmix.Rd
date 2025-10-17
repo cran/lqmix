@@ -2,7 +2,7 @@
 % Please edit documentation in R/coef.seach_lqmix.R
 \name{coef.search_lqmix}
 \alias{coef.search_lqmix}
-\title{Print the estimated fixed coefficients of the optimal model stored in a \code{search_lqmix} object}
+\title{Printn the estimated coefficients for the optimal fitted model}
 \usage{
 \method{coef}{search_lqmix}(object, ...)
 }
@@ -12,8 +12,8 @@
 \item{\dots}{not used}
 }
 \value{
-Return the estimated fixed coefficients obtained at convergence of the EM algorithm for the optimal model stored in an object of \code{\link{class}} \code{search_lqmix}
+Return the estimated coefficients obtained at convergence of the EM algorithm for the optimal model obtained at convergence of the EM algorithm for a fitted model of \code{\link{class}} \code{\link{search_lqmix}}.
 }
 \description{
-Print the estimated fixed coefficients of the optimal fitted model stored in an object of \code{\link{class}} \code{search_lqmix}
+Print the estimated coefficients of the optimal fitted model stored in an object of \code{\link{class}} \code{\link{search_lqmix}}.
 }

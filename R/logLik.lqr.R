@@ -1,11 +1,11 @@
 #' Print the log-likelihood of an \code{lqr} object
 #'
-#' Print the log-likelihood of a fitted model of \code{\link{class}} \code{lqr}
+#' Print the log-likelihood of a fitted model of \code{\link{class}} \code{\link{lqr}}.
 #'
 #' @param object an \code{lqr} object
 #' @param \dots not used
 #'
-#' @return Return an object of \code{\link{class}} \code{logLik} providing the log-likelihood for a fitted model of \code{\link{class}} \code{lqr}
+#' @return Return an object of \code{\link{class}} \code{logLik} providing the log-likelihood for a fitted model of \code{\link{class}} \code{\link{lqr}}.
 #'
 #' @export
 #'

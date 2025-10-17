@@ -2,15 +2,15 @@
 % Please edit documentation in R/plot.search_lqmix.R
 \name{plot.search_lqmix}
 \alias{plot.search_lqmix}
-\title{Plots for search_lqmix objects}
+\title{Plots for \code{search_lqmix} objects}
 \usage{
 \method{plot}{search_lqmix}(x, ...)
 }
 \arguments{
-\item{x}{an object of class \link{search_lqmix}}
+\item{x}{an object of class \code{search_lqmix}}
 
 \item{\dots}{not used}
 }
 \description{
-Graphically display model selection criteria and component and/or transition probabilities of the optimal fitted model of \code{\link{class}} \code{search_lqmix}
+Graphically display model selection criteria and component and/or transition probabilities of the optimal fitted model of \code{\link{class}} \code{\link{search_lqmix}}.
 }

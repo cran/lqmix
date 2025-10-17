@@ -2,7 +2,7 @@
 % Please edit documentation in R/coef.lqr.R
 \name{coef.lqr}
 \alias{coef.lqr}
-\title{Print the estimated fixed coefficients of an \code{lqr} object}
+\title{Print the estimated coefficients of an \code{lqr} object}
 \usage{
 \method{coef}{lqr}(object, ...)
 }
@@ -12,8 +12,8 @@
 \item{\dots}{not used}
 }
 \value{
-Return the estimated coefficients obtained at convergence of the EM algorithm for a fitted model of \code{\link{class}} \code{lqr}
+Return the estimated coefficients for a fitted model of \code{\link{class}} \code{\link{lqr}}.
 }
 \description{
-Print the estimated fixed coefficients of a fitted model of \code{\link{class}} \code{lqr}
+Print the estimated coefficients of a fitted model stored in an object of \code{\link{class}} \code{\link{lqr}}.
 }

@@ -29,10 +29,11 @@ CD4 cell counts of 369 subjects followed for a maximum of 12 measurement occasio
 }
 \details{
 Multi-center AIDS Cohort Study providing a total of 2376 CD4+ cell counts of 369 HIV-infected men covering a period of approximately eight and half years.
-The number of measurements for each individual varies from 1 to 12. The CD4+ cell data are highly unbalanced.
+The number of measurements for each subject varies from 1 to 12. The CD4+ cell data are highly unbalanced.
 }
 \references{
-Zeger, Scott L., and Peter J. Diggle. "Semiparametric models for longitudinal data with application
-to CD4 cell numbers in HIV seroconverters." Biometrics (1994): 689-699.
+{
+  \insertRef{ref:cd4}{lqmix}
+}
 }
 \keyword{datasets}

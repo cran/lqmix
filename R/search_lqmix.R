@@ -1,35 +1,37 @@
 #' Search the Global Maximum of a Linear Quantile Mixture
 #'
-#' Search the global maximum of the log-likelihood function for a finite mixture of linear quantile regression models with TC and/or TV, discrete, random coefficients, for varying number of components and/or states
+#' Search the global maximum of the log-likelihood function for a finite mixture of linear quantile regression models with TC and/or TV, discrete, random coefficients, for varying number of components and/or states.
 #'
-#' @param formula an object of \code{\link{class}} \code{formula}: a symbolic description of the model to be fitted
-#' @param randomTC a one-sided formula of the form \code{~z1+z2+...+zr}, where \code{z1,..., zr} denote the variables associated to TC random coefficients (1 for the intercept)
+#' @param formula an object of \code{class} \code{formula}: a symbolic description of the model to be fitted
+#' @param randomTC a one-sided formula of the form \code{~z1+z2+...+zd}, where \code{z1,..., zd} denote the variables associated to TC random coefficients (1 for the intercept)
 #' @param randomTV a one-sided formula of the form \code{~w1+w2+...+wl}, where \code{w1,..., wl} denote the variables associated to TV random coefficients (1 for the intercept). Note that only TC variables are allowed
 #' @param group a string indicating the grouping variable, i.e., the factor identifying the unit longitudinal measurements refer to
 #' @param time a string indicating the time variable
-#' @param Gv vector of possible number of mixture components associated to TC random coefficients (if present)
-#' @param mv vector of possible number of states associated to the TV random coefficients (if present)
+#' @param Gv vector of possible number of mixture components associated to TC random coefficients, if present in the model
+#' @param mv vector of possible number of states associated to the TV random coefficients, if present in the model
 #' @param method method to use for selecting the optimal model. Possible values are \code{"lk"}, \code{"aic"}, or \code{"bic"}
-#' @param data a data frame containing the variables named in \code{formula}, \code{randomTC}, \code{randomTV}, and \code{time}
+#' @param data a data frame containing the variables named in \code{formula}, \code{randomTC}, \code{randomTV}, \code{group}, and \code{time}
 #' @param qtl quantile to be estimated
-#' @param eps tolerance level for (relative) convergence of the EM algorithm
+#' @param eps tolerance level for convergence of the EM algorithm
 #' @param maxit maximum number of iterations for the EM algorithm
 #' @param se standard error computation for the optimal model
 #' @param R number of bootstrap samples for computing standard errors
 #' @param nran number of repetitions of each random initialization
-#' @param seed an integer value for random numbers generation
+#' @param seed an integer value for random numbers generation, used for random parameter initialization and bootstrap standard errors
 #' @param verbose if set to FALSE, no printed output is given during the function execution
-#' @param posterior if set to TRUE, posterior probabilities are given in output
-#' @param parallel if set to TRUE, a parallelized code is use for standard error computation (if se=TRUE)
-#'
+#' @param parallel if set to TRUE, a parallelized code is used for standard error computation (if \code{se = TRUE})
+#' @param ncores number of cores used for computing bootstrap standard errors (if required)
+
 #' @details
 #' The function allows to identify the optimal model specification in terms of number of mixture components and/or hidden states associated to
 #' TC and/or TV random coefficients, respectively.
 #' This is done by considering a multi-start strategy based on both deterministic and random starting points.
-#' The number or random tries is proportional to the number of mixture components and/or hidden states associated to the random coefficients in the model.
+#' The number or random starts is proportional to the number of mixture components and/or hidden states associated to the random coefficients in the model.
+#' For models based on TC random coefficients, \code{nran x (G-1)} random starts are considered;
+#' for models based on TV or TC and TV random coefficients, the number of random start is set to \code{nran x (m-1)} and \code{nran x (G-1) x (m-1)}, respectively.
 #'
-#' If \code{method="lk"}, the optimal model selected by the function is that providing the highest log-likelihood value;
-#' if \code{method="AIC"}, (\code{method="BIC"}, respectively), the optimal model selected by the function is that providing the lowest AIC (BIC, respectively) value.
+#' If \code{method = "lk"}, the optimal model selected by the function is that providing the highest log-likelihood value;
+#' if \code{method = "AIC"}, (\code{method = "BIC"}, respectively), the optimal model selected by the function is that providing the lowest AIC (BIC, respectively) value.
 #'
 #' If \code{se=TRUE}, standard errors based on a block bootstrap procedure are computed for the identified optimal model.
 #'
@@ -39,13 +41,14 @@
 #' methods
 #'
 #' @importFrom foreach foreach
+#' @importFrom doRNG %dorng%
 #'
-#' @return Return an object of \code{\link{class}} \code{search_lqmix}. This is a list containing the following elements:
+#' @return Return an object of \code{class} \code{search_lqmix}. This is a list containing the following elements:
 #' \item{optimal}{the identified optimal model}
-#' \item{allmodels}{the output of each estimated model}
-#' \item{lkv}{the vector of likelihood values for each estimated model}
-#' \item{aicv}{the vector of AIC values for each estimated model}
-#' \item{bicv}{the vector of BIC values for each estimated model}
+#' \item{allmodels}{the output of each estimated model in the form of a list of lists; the former and the latter list are associated with TC and TV random coefficients, respectively}
+#' \item{lkv}{the vector of likelihood values for each fitted model}
+#' \item{aicv}{the vector of AIC values for each fitted model}
+#' \item{bicv}{the vector of BIC values for each fitted model}
 #' \item{qtl}{the estimated quantile}
 #' \item{mv}{the vector of possible number of states associated to TV random coefficients (if present)}
 #' \item{Gv}{the vector of possible number of mixture components associated to TC random coefficients (if present)}
@@ -65,7 +68,7 @@
 #'
 #' @export
 
-search_lqmix = function(formula,randomTC=NULL,randomTV=NULL,group,time,Gv=NULL,mv=NULL,data,method="bic",nran=0,qtl=0.5,eps=10^-5,maxit=1000,se=TRUE,R=50,verbose=TRUE,posterior=FALSE,seed=NULL,parallel=FALSE){
+search_lqmix = function(formula,randomTC=NULL,randomTV=NULL,group,time,Gv=NULL,mv=NULL,data,method="bic",nran=0,qtl=0.5,eps=10^-5,maxit=1000,se=TRUE,R=200,verbose=TRUE,seed=NULL,parallel=FALSE,ncores=2){
 
   # possible errors
   if(is.null(Gv) & is.null(mv)) stop("No values for both Gv and mv are provided.")
@@ -76,15 +79,15 @@ search_lqmix = function(formula,randomTC=NULL,randomTV=NULL,group,time,Gv=NULL,m
     cat("Search the optimal linear quantile mixture model", "\n")
     cat("*************************************************", "\n")
   }
-
   if(is.null(data)) stop("No input dataset has been given.")
+  if(!is.null(seed)) set.seed(seed)
 
   if(is.null(randomTV) & !is.null(randomTC)){ # model = "TC"
+
     # possible errors
     if(is.null(Gv) & !is.null(randomTC)) stop("The argument Gv has not been specified.")
     if(!is.null(Gv) & is.null(randomTC)) stop("The argument randomTC has not been specified.")
     if(!is.null(mv)) stop("A value for the argument mv has been provided. Specify the argument randomTV as well.")
-
 
     model = "TC"
     Gv = unique(sort(Gv))
@@ -95,20 +98,20 @@ search_lqmix = function(formula,randomTC=NULL,randomTV=NULL,group,time,Gv=NULL,m
     for(g in Gv){
       if(g == 1){
         if(verbose) if(nran>0)cat("Random start: 0 ... \n")
-        out[[1]][[g]] = try(lqr(formula=formula,data=data,verbose=verbose,qtl=qtl,se=F,search=T))
+        out[[1]][[g]] = try(lqr(formula=formula,data=data,verbose=verbose,qtl=qtl,se=F))
       }else if(nran>0){
-        oo = try(lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=g,eps=10^-2,data=data,qtl=qtl,verbose=F,maxit=maxit,se=F))
         if(verbose) cat("Random start: 0 ... ")
+        oo = try(lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=g,eps=10^-2,data=data,qtl=qtl,verbose=F,maxit=maxit,se=F))
+        #if(!is.null(seed)) set.seed(seed)
         for(h in 1:(nran*(g-1))){
           if(verbose) cat(h, " ... ")
-          if(!is.null(seed)) seed=seed+h
-          ooh = try(lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=g,eps=10^-2,data=data,qtl=qtl,start=1,verbose=F,maxit=maxit,se=F,seed=seed))
+          ooh = try(lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=g,eps=10^-2,data=data,qtl=qtl,start=1,verbose=F,maxit=maxit,se=F))
           if(ooh$lk > oo$lk) oo = ooh
         }
-        if(verbose)cat("\n")
-        out[[1]][[g]] = lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=g,data=data,qtl=qtl,start=2,parInit=oo,verbose=verbose,maxit=maxit,eps=eps,se=F,search=T)
+        if(verbose) cat("\n")
+        out[[1]][[g]] = lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=g,data=data,qtl=qtl,start=2,parInit=oo,verbose=verbose,maxit=maxit,eps=eps,se=F)
       }else{
-        out[[1]][[g]] = lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=g,data=data,qtl=qtl,start=0,verbose=verbose,maxit=maxit,eps=eps,se=F,search=T)
+        out[[1]][[g]] = lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=g,data=data,qtl=qtl,start=0,verbose=verbose,maxit=maxit,eps=eps,se=F)
       }
 
       if(!inherits(out[[1]][[g]], "try-error")){
@@ -139,20 +142,19 @@ search_lqmix = function(formula,randomTC=NULL,randomTV=NULL,group,time,Gv=NULL,m
       out[[m]] = vector("list",1)
       if(m == 1){
         if(verbose) if(nran>0) cat("Random start: 0 ... \n")
-        out[[m]][[1]] = try(lqr(formula=formula,data=data,verbose=verbose,qtl=qtl,se=F,search=T))
+        out[[m]][[1]] = try(lqr(formula=formula,data=data,verbose=verbose,qtl=qtl,se=F))
       }else if(nran>0){
-        oo = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=m,eps=10^-2,data=data,qtl=qtl,verbose=FALSE,se=F))
         if(verbose) cat("Random start: 0 ... ")
+        oo = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=m,eps=10^-2,data=data,qtl=qtl,verbose=FALSE,se=F))
         for(h in 1:(nran*(m-1))){
           if(verbose) cat(h, " ... ")
-          if(!is.null(seed)) seed=seed+h
-          ooh = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=m,eps=10^-2,data=data,qtl=qtl,start=1,verbose=FALSE,se=F,seed=seed))
+          ooh = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=m,eps=10^-2,data=data,qtl=qtl,start=1,verbose=FALSE,se=F))
           if(ooh$lk > oo$lk) oo = ooh
         }
-        if(verbose)cat("\n")
-        out[[m]][[1]] = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=m,data=data,qtl=qtl,start=2,parInit=oo,verbose=verbose,maxit=maxit,eps=eps,se=F,search=T))
+        if(verbose) cat("\n")
+        out[[m]][[1]] = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=m,data=data,qtl=qtl,start=2,parInit=oo,verbose=verbose,maxit=maxit,eps=eps,se=F))
       }else{
-        out[[m]][[1]] = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=m,data=data,qtl=qtl,start=0,verbose=verbose,maxit=maxit,eps=eps,se=F,search=T))
+        out[[m]][[1]] = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=m,data=data,qtl=qtl,start=0,verbose=verbose,maxit=maxit,eps=eps,se=F))
       }
 
       if(!inherits(out[[m]][[1]], "try-error")){
@@ -167,7 +169,7 @@ search_lqmix = function(formula,randomTC=NULL,randomTV=NULL,group,time,Gv=NULL,m
       }
     }
 
-  }else{
+  }else{ # model TCTV
 
     if(any(is.null(Gv), is.null(mv)) & !any(is.null(randomTC), is.null(randomTV))) stop("The argument(s) Gv and/or mv has/have not been specified.")
     if(!any(is.null(Gv), is.null(mv)) & any(is.null(randomTC), is.null(randomTV))) stop("The argument(s) randomTC and/or randomTV has/have not been specified.")
@@ -184,50 +186,52 @@ search_lqmix = function(formula,randomTC=NULL,randomTV=NULL,group,time,Gv=NULL,m
       for(g in sort(Gv)){
         if(m == 1 & g == 1){
           if(verbose) if(nran>0) cat("Random start: 0 ... \n")
-          out[[m]][[g]] = try(lqr(formula=formula,data=data,verbose=verbose,qtl=qtl,se=F,search=T)) # model Homogeneous
+          out[[m]][[g]] = try(lqr(formula=formula,data=data,verbose=verbose,qtl=qtl,se=F)) # model Homogeneous
         }else if(m > 1 & g == 1){ # model = TV
           if(nran>0){
-            oo = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=m,eps=10^-2,data=data,qtl=qtl,verbose=FALSE,se=F))
             if(verbose) cat("Random start: 0 ... ")
+            oo = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=m,eps=10^-2,data=data,qtl=qtl,verbose=FALSE,se=F))
+            #if(!is.null(seed)) set.seed(seed)
             for(h in 1:(nran*(m-1))){
               if(verbose) cat(h, " ... ")
-              if(!is.null(seed)) seed=seed+h
-              ooh = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=m,eps=10^-2,data=data,qtl=qtl,start=1,verbose=FALSE,se=F,seed=seed))
+              ooh = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=m,eps=10^-2,data=data,qtl=qtl,start=1,verbose=FALSE,se=F))
               if(ooh$lk > oo$lk) oo = ooh
             }
             if(verbose) cat("\n")
-            out[[m]][[g]] = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=m,data=data,qtl=qtl,start=2,parInit=oo,verbose=verbose,maxit=maxit,eps=eps,se=F,search=T))
-          }else out[[m]][[g]] = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=m,data=data,qtl=qtl,start=0,verbose=verbose,maxit=maxit,eps=eps,se=F,search=T))
+            out[[m]][[g]] = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=m,data=data,qtl=qtl,start=2,parInit=oo,verbose=verbose,maxit=maxit,eps=eps,se=F))
+          }else out[[m]][[g]] = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=m,data=data,qtl=qtl,start=0,verbose=verbose,maxit=maxit,eps=eps,se=F))
 
         }else if(m == 1 & g > 1){ # model = TC
-        #  if(verbose) cat("Model TC - qtl =", qtl, "\n")
+
           if(nran>0){
-            oo = try(lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=g,eps=10^-2,data=data,qtl=qtl,verbose=FALSE,se=F))
             if(verbose) cat("Random start: 0 ... ")
+            oo = try(lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=g,eps=10^-2,data=data,qtl=qtl,verbose=FALSE,se=F))
+            #if(!is.null(seed)) set.seed(seed)
             for(h in 1:(nran*(g-1))){
               if(verbose) cat(h, " ... ")
-              if(!is.null(seed)) seed=seed+h
-              ooh = try(lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=g,eps=10^-2,data=data,qtl=qtl,start=1,verbose=FALSE,se=F, seed=seed))
+              ooh = try(lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=g,eps=10^-2,data=data,qtl=qtl,start=1,verbose=FALSE,se=F))
               if(ooh$lk > oo$lk) oo = ooh
             }
             if(verbose) cat("\n")
-            out[[m]][[g]] = lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=g,data=data,qtl=qtl,start=2,parInit=oo,verbose=verbose,maxit=maxit,eps=eps,se=F,search=T)
-          }else out[[m]][[g]] = lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=g,data=data,qtl=qtl,start=0,verbose=verbose,maxit=maxit,eps=eps,se=F,search=T)
+            out[[m]][[g]] = lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=g,data=data,qtl=qtl,start=2,parInit=oo,verbose=verbose,maxit=maxit,eps=eps,se=F)
+          }else out[[m]][[g]] = lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=g,data=data,qtl=qtl,start=0,verbose=verbose,maxit=maxit,eps=eps,se=F)
 
         }else{ # model = TCTV
-
           if(nran>0){
-            oo = try(lqmixTCTV(formula=formula,randomTC=randomTC,randomTV=randomTV,group=group,time=time,m=m,G=g,eps=10^-2,data=data,qtl=qtl,verbose=F,se=F))
             if(verbose) cat("Random start: 0 ... ")
+
+            oo = try(lqmixTCTV(formula=formula,randomTC=randomTC,randomTV=randomTV,
+                               group=group,time=time,m=m,G=g,eps=10^-2,data=data,
+                               qtl=qtl,verbose=F,se=F))
+            #if(!is.null(seed)) set.seed(seed)
             for(h in 1:(nran*(m-1)*(g-1))){
-              if(verbose)cat(h, " ... ")
-              if(!is.null(seed)) seed=seed+h
-               ooh = try(lqmixTCTV(formula=formula,randomTC=randomTC,randomTV=randomTV,group=group,time=time,m=m,G=g,eps=10^-2,data=data,qtl=qtl,start=1,verbose=F,se=F,seed=seed))
+              if(verbose) cat(h, " ... ")
+               ooh = try(lqmixTCTV(formula=formula,randomTC=randomTC,randomTV=randomTV,group=group,time=time,m=m,G=g,eps=10^-2,data=data,qtl=qtl,start=1,verbose=F,se=F))
               if(ooh$lk > oo$lk) oo = ooh
             }
             if(verbose)cat("\n")
-            out[[m]][[g]] = try(lqmixTCTV(formula=formula,randomTC=randomTC,randomTV=randomTV,group=group,time=time,m=m,G=g,data=data,qtl=qtl,start=2,parInit=oo,verbose=verbose,maxit=maxit,eps=eps,se=F,search=TRUE))
-          }else out[[m]][[g]] = try(lqmixTCTV(formula=formula,randomTC=randomTC,randomTV=randomTV,group=group,time=time,m=m,G=g,data=data,qtl=qtl,start=0,verbose=verbose,maxit=maxit,eps=eps,se=F,search=TRUE))
+            out[[m]][[g]] = try(lqmixTCTV(formula=formula,randomTC=randomTC,randomTV=randomTV,group=group,time=time,m=m,G=g,data=data,qtl=qtl,start=2,parInit=oo,verbose=verbose,maxit=maxit,eps=eps,se=F))
+          }else out[[m]][[g]] = try(lqmixTCTV(formula=formula,randomTC=randomTC,randomTV=randomTV,group=group,time=time,m=m,G=g,data=data,qtl=qtl,start=0,verbose=verbose,maxit=maxit,eps=eps,se=F))
         }
 
         if(!inherits(out[[m]][[g]], "try-error")){
@@ -260,26 +264,17 @@ search_lqmix = function(formula,randomTC=NULL,randomTV=NULL,group,time,Gv=NULL,m
     whTV = as.numeric(strsplit(strsplit(names(bicv)[wh], "-")[[1]][1],"=")[[1]][2])
 
     if(se){
-      if(verbose) cat("Computing standard errors for the optimal model ...\n")
-
-      #if(parallel==TRUE) registerDoParallel(2) else registerDoParallel(1)
-      if(parallel==TRUE) cl = makeCluster(2) else cl = makeCluster(1)
-      registerDoSNOW(cl)
       if(whTC == 1 & whTV == 1){
-        if(verbose) optimal.model = try(lqr(formula=formula,data=data,verbose=F,qtl=qtl,se=T,R=R,search=T,opt=TRUE)) # model Homogeneous
-        else optimal.model = try(lqr(formula=formula,data=data,verbose=F,qtl=qtl,se=T,R=R,opt=TRUE)) # model Homogeneous
+        optimal.model = try(lqr(formula=formula,data=data,verbose=verbose,qtl=qtl,se=T,R=R,opt=TRUE,parallel=parallel,ncores=ncores)) # model Homogeneous
       }else if(whTC == 1 & whTV > 1){
         modInit = out[[whTV]][[1]]
-        if(verbose) optimal.model = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=whTV,data=data,qtl=qtl,start=2,parInit=modInit,verbose=F,maxit=maxit,eps=eps,se=T,R=R,search=T,opt=TRUE,parallel=parallel))
-        else optimal.model = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=whTV,data=data,qtl=qtl,start=2,parInit=modInit,verbose=F,maxit=maxit,eps=eps,se=T,R=R,opt=TRUE,parallel=parallel))
+        optimal.model = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=whTV,data=data,qtl=qtl,start=2,parInit=modInit,verbose=verbose,maxit=maxit,eps=eps,se=T,R=R,opt=TRUE,parallel=parallel,ncores=ncores))
        }else if(whTC > 1 & whTV == 1){
          modInit = out[[1]][[whTC]]
-        if(verbose) optimal.model = try(lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=whTC,data=data,qtl=qtl,start=2,parInit=modInit,verbose=F,maxit=maxit,eps=eps,se=T,R=R,search=T,opt=TRUE,parallel=parallel))
-        else optimal.model = try(lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=whTC,data=data,qtl=qtl,start=2,parInit=modInit,verbose=F,maxit=maxit,eps=eps,se=T,R=R,opt=TRUE,parallel=parallel))
+         optimal.model = try(lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=whTC,data=data,qtl=qtl,start=2,parInit=modInit,verbose=verbose,maxit=maxit,eps=eps,se=T,R=R,opt=TRUE,parallel=parallel,ncores=ncores))
       }else{
          modInit = out[[whTV]][[whTC]]
-         if(verbose) optimal.model = try(lqmixTCTV(formula=formula,randomTC=randomTC,randomTV=randomTV,group=group,time=time,m=whTV,G=whTC,data=data,qtl=qtl,start=2,parInit=modInit,verbose=F,maxit=maxit,eps=eps,se=T,R=R,search=T,opt=TRUE,parallel=parallel))
-         else optimal.model = try(lqmixTCTV(formula=formula,randomTC=randomTC,randomTV=randomTV,group=group,time=time,m=whTV,G=whTC,data=data,qtl=qtl,start=2,parInit=modInit,verbose=F,maxit=maxit,eps=eps,se=T,R=R,opt=TRUE,parallel=parallel))
+         optimal.model = try(lqmixTCTV(formula=formula,randomTC=randomTC,randomTV=randomTV,group=group,time=time,m=whTV,G=whTC,data=data,qtl=qtl,start=2,parInit=modInit,verbose=verbose,maxit=maxit,eps=eps,se=T,R=R,opt=TRUE,parallel=parallel,ncores=ncores))
       }
     }else optimal.model = out[[whTV]][[whTC]]
 
@@ -288,16 +283,12 @@ search_lqmix = function(formula,randomTC=NULL,randomTV=NULL,group,time,Gv=NULL,m
   }else if(model == "TC"){ # TC
 
     whTC = as.numeric(strsplit(strsplit(names(bicv)[wh], "-")[[1]][2],"=")[[1]][2])
-
     if(se){
-      if(verbose) cat("Computing standard errors for the optimal model ...\n ")
-      if(whTC == 1){
-        if(verbose) optimal.model = try(lqr(formula=formula,data=data,qtl=qtl,se=T,R=R,verbose=F,search=T,opt=TRUE)) # model Homogeneous
-        else optimal.model = try(lqr(formula=formula,data=data,qtl=qtl,se=T,R=R,verbose=F,opt=TRUE)) # model Homogeneous
-      }else{
+      if(whTC == 1)
+        optimal.model = try(lqr(formula=formula,data=data,qtl=qtl,se=T,R=R,verbose=verbose,opt=TRUE))
+      else{
         modInit = out[[1]][[whTC]]
-        if(verbose) optimal.model = try(lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=whTC,data=data,qtl=qtl,start=2,parInit=modInit,verbose=F,maxit=maxit,eps=eps,se=T,R=R,search=T,opt=TRUE,parallel=parallel))
-        else optimal.model = try(lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=whTC,data=data,qtl=qtl,start=2,parInit=modInit,verbose=F,maxit=maxit,eps=eps,se=T,R=R,opt=TRUE,parallel=parallel))
+        optimal.model = lqmixTC(formula=formula,randomTC=randomTC,group=group,time=time,G=whTC,data=data,qtl=qtl,start=2,parInit=modInit,verbose=TRUE,maxit=maxit,eps=eps,se=se,R=R,opt=TRUE,parallel=parallel,ncores=ncores)
       }
     }else optimal.model = out[[1]][[whTC]]
     optimal.model$call = NULL
@@ -306,29 +297,20 @@ search_lqmix = function(formula,randomTC=NULL,randomTV=NULL,group,time,Gv=NULL,m
     whTV = as.numeric(strsplit(strsplit(names(bicv)[wh], "-")[[1]][1],"=")[[1]][2])
 
     if(se){
-      if(verbose) cat("Computing standard errors for the optimal model ...\n ")
-      if(whTV == 1){
-        if(verbose) optimal.model = try(lqr(formula=formula,data=data,verbose=F,qtl=qtl,se=T,R=R,search=T,opt=TRUE)) # model Homogeneous
-        else optimal.model = try(lqr(formula=formula,data=data,verbose=F,qtl=qtl,se=T,R=R,opt=TRUE)) # model Homogeneous
-      }else{
+      if(whTV == 1)
+        optimal.model = try(lqr(formula=formula,data=data,verbose=verbose,qtl=qtl,se=T,R=R)) # model Homogeneous
+      else{
         modInit = out[[whTV]][[1]]
-        if(verbose) optimal.model = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=whTV,data=data,qtl=qtl,start=2,parInit=modInit,verbose=F,maxit=maxit,eps=eps,se=T,R=R,search=T,opt=TRUE,parallel=parallel))
-        else optimal.model = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=whTV,data=data,qtl=qtl,start=2,parInit=modInit,verbose=F,maxit=maxit,eps=eps,se=T,R=R,opt=TRUE,parallel=parallel))
+        optimal.model = try(lqmixTV(formula=formula,randomTV=randomTV,group=group,time=time,m=whTV,data=data,qtl=qtl,start=2,parInit=modInit,verbose=verbose,maxit=maxit,eps=eps,se=TRUE,R=R,opt=TRUE,parallel=parallel,ncores=ncores))
       }
     }else optimal.model = out[[whTV]][[1]]
 
 
     optimal.model$call = NULL
   }
-  if(model == "TCTV") o = list(optimal=optimal.model, allmodels=out,lkv=lkv,aicv=aicv,bicv=bicv,qtl=qtl,mv=mv,Gv=Gv,method=method)
-  else if(model == "TC") o = list(optimal=optimal.model, allmodels=out,lkv=lkv,aicv=aicv,bicv=bicv,qtl=qtl,Gv=Gv,method=method)
-  else o = list(optimal=optimal.model, allmodels=out,lkv=lkv,aicv=aicv,bicv=bicv,qtl=qtl,mv=mv,method=method)
-
-  if(!posterior){
-    o$optimal.model$postTC = NULL
-    o$optimal.model$postTV = NULL
-    o$allmodels = lapply(o$allmodels, function(sub){sub$postTC = NULL; sub$postTV = NULL; sub})
-  }
+  if(model == "TC") out = unlist(out, recursive = FALSE)
+  else if(model == "TV") out = lapply(out, function(xx) unlist(xx, recursive = FALSE))
+  o = list(optimal=optimal.model, allmodels=out,lkv=lkv,aicv=aicv,bicv=bicv,qtl=qtl,Gv=Gv,mv=mv,method=method)
 
 
   o$call <- match.call()
@@ -338,9 +320,6 @@ search_lqmix = function(formula,randomTC=NULL,randomTV=NULL,group,time,Gv=NULL,m
   o$group <- group
   o$time <- time
   class(o) <- "search_lqmix"
-
-  if(!posterior) o$post = NULL
-
 
   return(o)
 

@@ -6,14 +6,14 @@
 \usage{
 lqmix(formula, randomTC = NULL, randomTV = NULL, group, time, G = NULL,
   m = NULL, data, qtl = 0.5, eps = 10^-5, maxit = 1000, se = TRUE,
-  R = 50, start = 0, parInit = list(betaf = NULL, betarTC = NULL, betarTV
-  = NULL, pg = NULL, delta = NULL, Gamma = NULL, scale = NULL),
-  verbose = TRUE, posterior = FALSE, seed = NULL, parallel = FALSE)
+  R = 200, start = 0, parInit = list(betaf = NULL, betarTC = NULL,
+  betarTV = NULL, pg = NULL, delta = NULL, Gamma = NULL, scale = NULL),
+  verbose = TRUE, seed = NULL, parallel = FALSE, ncores = 2)
 }
 \arguments{
-\item{formula}{an object of class \code{\link{formula}}: a symbolic description of the model to be fitted}
+\item{formula}{an object of class \code{formula}: a symbolic description of the model to be fitted}
 
-\item{randomTC}{a one-sided formula of the form \code{~z1+z2+...+zr}, where \code{z1,..., zr} denote the variables associated to TC random coefficients (1 for the intercept)}
+\item{randomTC}{a one-sided formula of the form \code{~z1+z2+...+zd}, where \code{z1,..., zd} denote the variables associated to TC random coefficients (1 for the intercept)}
 
 \item{randomTV}{a one-sided formula of the form \code{~w1+w2+...+wl}, where \code{w1,..., wl} denote the variables associated to TV random coefficients (1 for the intercept). Note that only TC variables are allowed}
 
@@ -23,13 +23,13 @@ lqmix(formula, randomTC = NULL, randomTV = NULL, group, time, G = NULL,
 
 \item{G}{number of mixture components associated to TC random coefficients}
 
-\item{m}{number of states associated to the TV random coefficients}
+\item{m}{number of states associated to TV random coefficients}
 
-\item{data}{a data frame containing the variables named in \code{formula}, \code{randomTC}, \code{randomTV}, and \code{time}}
+\item{data}{a data frame containing the variables named in \code{formula}, \code{randomTC}, \code{randomTV}, \code{group}, and \code{time}}
 
 \item{qtl}{quantile to be estimated}
 
-\item{eps}{tolerance level for (relative) convergence of the EM algorithm}
+\item{eps}{tolerance level for convergence of the EM algorithm}
 
 \item{maxit}{maximum number of iterations for the EM algorithm}
 
@@ -43,17 +43,17 @@ lqmix(formula, randomTC = NULL, randomTV = NULL, group, time, G = NULL,
 
 \item{verbose}{if set to FALSE, no printed output is given during the function execution}
 
-\item{posterior}{if set to TRUE, posterior probabilities are given in output}
+\item{seed}{an integer value for random numbers generation, used for random parameter initialization and bootstrap standard errors}
 
-\item{seed}{an integer value for random numbers generation}
+\item{parallel}{if set to TRUE, a parallelized code is use for standard error computation (if \code{se = TRUE})}
 
-\item{parallel}{if set to TRUE, a parallelized code is use for standard error computation (if se=TRUE)}
+\item{ncores}{number of cores used for computing bootstrap standard errors (if required)}
 }
 \value{
-Return an object of \code{\link{class}} \code{lqmix}. This is a list containing the following elements:
-\item{betaf}{a vector containing fixed regression coefficients}
-\item{betarTC}{a matrix containing the TC random coefficients, if present in the model}
-\item{betarTV}{a matrix containing the TV random coefficients, if present in the model}
+Return an object of \code{class} \code{lqmix}. This is a list containing the following elements:
+\item{betaf}{a vector of fixed regression coefficients}
+\item{betarTC}{a matrix of TC random coefficients, if present in the model}
+\item{betarTV}{a matrix of TV random coefficients, if present in the model}
 \item{pg}{the prior probabilities of the finite mixture associated to TC random coefficients, if present in the model}
 \item{delta}{the initial probability vector of the hidden Markov chain associated to TV random coefficients, if present in the model}
 \item{Gamma}{the transition probability matrix of the hidden Markov chain associated to TV random coefficients, if present in the model}
@@ -66,27 +66,37 @@ Return an object of \code{\link{class}} \code{lqmix}. This is a list containing 
 \item{qtl}{the estimated quantile}
 \item{G}{the number of mixture components associated to TC random coefficients (if present)}
 \item{m}{the number of hidden states associated to TV random coefficients (if present)}
-\item{nsbjs}{the number of subjects}
+\item{nsbjs}{the number of subjects (units)}
 \item{nobs}{the total number of observations}
 \item{se.betaf}{the standard errors for fixed regression coefficients}
-\item{se.betarTC}{the standard errors for TC random coefficients (if present)}
-\item{se.betarTV}{the standard errors for TV random coefficients (if present)}
-\item{se.Mprob}{the standard errors for the prior probabilities of the finite mixture associated to TC random coefficients (if present)}
-\item{se.Init}{the standard errors for the initial probabilities of the hidden Markov chain associated to TV random coefficients(if present)}
-\item{se.Trans}{the standard errors for the transition probabilities of the hidden Markov chain associated to TV random coefficients (if present)}
+\item{se.betarTC}{the standard errors for TC random coefficients, if present in the model}
+\item{se.betarTV}{the standard errors for TV random coefficients, if present in the model}
+\item{se.Mprob}{the standard errors for the prior probabilities of the finite mixture associated to TC random coefficients, if present in the model}
+\item{se.Init}{the standard errors for the initial probabilities of the hidden Markov chain associated to TV random coefficients, if present in the model}
+\item{se.Trans}{the standard errors for the transition probabilities of the hidden Markov chain associated to TV random coefficients, if present in the model}
 \item{se.scale}{the standard error for the scale parameter}
-\item{postTC}{estimated posterior probabilities for the finite mixture components associated to TC random coefficients}
-\item{postTV}{estimated posterior probabilities for the hidden states associated to TV random coefficients}
+\item{vcov}{the bootstrap variance-covariance matrices of the regression coefficients}
+\item{postTC}{a matrix of size \code{nsbjs x G} with the estimated posterior probabilities for the finite mixture components associated to TC random coefficients, if present in the model}
+\item{postTV}{a matrix of size \code{nObs x m} with the estimated posterior probabilities for the hidden states associated to TV random coefficients, if present in the model}
 \item{miss}{the missingness type}
 \item{model}{the estimated model}
 \item{call}{the matched call}
+\item{mmf}{the model matrix associated with fixed regression coefficients}
+\item{mmrTC}{the model matrix associated with TC random coefficients, if present in the model}
+\item{mmrTV}{the model matrix associated with TV random coefficients, if present in the model}
+\item{y}{the model response}
+\item{formula}{the fixed model formula}
+\item{randomTC}{the model formula for the TC random coefficients, if present in the model}
+\item{randomTV}{the model formula for the TV random coefficients, if present in the model}
+\item{group}{the grouping variable}
+\item{time}{the time variable}
 }
 \description{
-Estimate a finite mixture of linear quantile regression models with TC and/or TV discrete random coefficients, for a given number of components and/or states
+Estimate a finite mixture of linear quantile regression models with TC and/or TV discrete random coefficients, for a given number of components and/or states.
 }
 \details{
-The function computes ML estimates for a linear quantile mixture model with on TC and/or TV random coefficients.
-Estimates are derived by maximizing the (log-)likelihood of an asymmetric Laplace regression, where the location parameter is modeled as a function of fixed coefficients, together with TC, TV, or TC and TV discrete random coefficients, as proposed by Alfo' et. al (2017), Farcomeni (2012), and Marino et. al (2018), respectively.
+The function computes ML estimates for a linear quantile mixture model with TC and/or TV random coefficients.
+Estimates are derived by maximizing the (log-)likelihood of an Asymmetric Laplace regression, where the location parameter is modeled as a function of fixed coefficients, together with TC, TV, or TC and TV discrete random coefficients, as proposed by Alfo' et. al (2017), Farcomeni (2012), and Marino et. al (2018), respectively.
 
 The function requires data in long-format and two additional columns indicating the group identifier and the time occasion.
 The model is specified by means of the arguments \code{formula}, \code{formulaTC}, and \code{formulaTV}:
@@ -112,14 +122,14 @@ outTCTV = lqmix(formula=meas~trt+time+trt:time,randomTC=~time,
 }
 \references{
 {
+  \insertRef{ref:lqmixTC}{lqmix}
+}
+
+{
+  \insertRef{ref:lqmixTV}{lqmix}
+}
+
+{
   \insertRef{ref:lqmixTCTV}{lqmix}
-}
-
-{
-  \insertRef{ref:mhmm1}{lqmix}
-}
-
-{
-  \insertRef{ref:mhmm2}{lqmix}
 }
 }

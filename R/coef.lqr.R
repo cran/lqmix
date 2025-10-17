@@ -1,11 +1,11 @@
-#' Print the estimated fixed coefficients of an \code{lqr} object
+#' Print the estimated coefficients of an \code{lqr} object
 #'
-#' Print the estimated fixed coefficients of a fitted model of \code{\link{class}} \code{lqr}
+#' Print the estimated coefficients of a fitted model stored in an object of \code{\link{class}} \code{\link{lqr}}.
 #'
 #' @param object an \code{lqmix} object
 #' @param \dots not used
 #'
-#' @return Return the estimated coefficients obtained at convergence of the EM algorithm for a fitted model of \code{\link{class}} \code{lqr}
+#' @return Return the estimated coefficients for a fitted model of \code{\link{class}} \code{\link{lqr}}.
 #'
 #' @export
 #'

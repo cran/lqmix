@@ -129,7 +129,7 @@ lqmixTV.fit = function(y, x.fixed, namesFix, x.random, namesRan, sbj.obs, time.o
 
     # E step
     # *******
-    post = postComputeTV_intermittent(A, li, delta, Gamma, fith, m, sbj.obs, time.obs, observed)
+    post = postComputeTV_intermittent(A, li, delta, Gamma, fith, m, sbj.obs, time.obs, n, T, observed)
     uSingle = post$uSingle
     uCouple = post$uCouple
     # M-step
@@ -196,7 +196,7 @@ lqmixTV.fit = function(y, x.fixed, namesFix, x.random, namesRan, sbj.obs, time.o
   rownames(Gamma) = paste("fromSt", 1:nrow(betar), sep="")
   colnames(Gamma) = paste("toSt", 1:nrow(betar), sep="")
 
-  uSingle =  post = postComputeTV_intermittent(A, li, delta, Gamma, fith, m, sbj.obs, time.obs, observed)$uSingle[,ord]
+  uSingle =  post = postComputeTV_intermittent(A, li, delta, Gamma, fith, m, sbj.obs, time.obs, n, T, observed)$uSingle[,ord]
   colnames(uSingle) = paste("St", 1:nrow(betar), sep="")
 
   res = list()

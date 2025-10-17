@@ -18,7 +18,7 @@ A data frame with 357 observations on the following 5 variables:
 data(pain)
 }
 \description{
-The pain data frame consists of a total of 357 rows and 4 columns providing information on pain levels of 83 women in labor, followed for up 6 measurement occasions
+The pain data frame consists of a total of 357 rows and 4 columns providing information on pain levels of 83 women in labor, followed for up 6 measurement occasions.
 }
 \details{
 The data set consists of repeated measurements of self-reported pain on n = 83 women.
@@ -28,6 +28,8 @@ The number of measurements for each woman varies from 1 to 6.
 Data are severely skewed, and the skewness changes magnitude, and even sign, over time.
 }
 \references{
-Davis, Charles S. "Semi-parametric and non-parametric methods for the analysis of repeated measurements with applications to clinical trials." Statistics in medicine 10.12 (1991): 1959-1980.
+{
+  \insertRef{ref:pain}{lqmix}
+}
 }
 \keyword{datasets}

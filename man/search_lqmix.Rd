@@ -6,13 +6,13 @@
 \usage{
 search_lqmix(formula, randomTC = NULL, randomTV = NULL, group, time,
   Gv = NULL, mv = NULL, data, method = "bic", nran = 0, qtl = 0.5,
-  eps = 10^-5, maxit = 1000, se = TRUE, R = 50, verbose = TRUE,
-  posterior = FALSE, seed = NULL, parallel = FALSE)
+  eps = 10^-5, maxit = 1000, se = TRUE, R = 200, verbose = TRUE,
+  seed = NULL, parallel = FALSE, ncores = 2)
 }
 \arguments{
-\item{formula}{an object of \code{\link{class}} \code{formula}: a symbolic description of the model to be fitted}
+\item{formula}{an object of \code{class} \code{formula}: a symbolic description of the model to be fitted}
 
-\item{randomTC}{a one-sided formula of the form \code{~z1+z2+...+zr}, where \code{z1,..., zr} denote the variables associated to TC random coefficients (1 for the intercept)}
+\item{randomTC}{a one-sided formula of the form \code{~z1+z2+...+zd}, where \code{z1,..., zd} denote the variables associated to TC random coefficients (1 for the intercept)}
 
 \item{randomTV}{a one-sided formula of the form \code{~w1+w2+...+wl}, where \code{w1,..., wl} denote the variables associated to TV random coefficients (1 for the intercept). Note that only TC variables are allowed}
 
@@ -20,11 +20,11 @@ search_lqmix(formula, randomTC = NULL, randomTV = NULL, group, time,
 
 \item{time}{a string indicating the time variable}
 
-\item{Gv}{vector of possible number of mixture components associated to TC random coefficients (if present)}
+\item{Gv}{vector of possible number of mixture components associated to TC random coefficients, if present in the model}
 
-\item{mv}{vector of possible number of states associated to the TV random coefficients (if present)}
+\item{mv}{vector of possible number of states associated to the TV random coefficients, if present in the model}
 
-\item{data}{a data frame containing the variables named in \code{formula}, \code{randomTC}, \code{randomTV}, and \code{time}}
+\item{data}{a data frame containing the variables named in \code{formula}, \code{randomTC}, \code{randomTV}, \code{group}, and \code{time}}
 
 \item{method}{method to use for selecting the optimal model. Possible values are \code{"lk"}, \code{"aic"}, or \code{"bic"}}
 
@@ -32,7 +32,7 @@ search_lqmix(formula, randomTC = NULL, randomTV = NULL, group, time,
 
 \item{qtl}{quantile to be estimated}
 
-\item{eps}{tolerance level for (relative) convergence of the EM algorithm}
+\item{eps}{tolerance level for convergence of the EM algorithm}
 
 \item{maxit}{maximum number of iterations for the EM algorithm}
 
@@ -42,19 +42,19 @@ search_lqmix(formula, randomTC = NULL, randomTV = NULL, group, time,
 
 \item{verbose}{if set to FALSE, no printed output is given during the function execution}
 
-\item{posterior}{if set to TRUE, posterior probabilities are given in output}
+\item{seed}{an integer value for random numbers generation, used for random parameter initialization and bootstrap standard errors}
 
-\item{seed}{an integer value for random numbers generation}
+\item{parallel}{if set to TRUE, a parallelized code is use for standard error computation (if \code{se = TRUE})}
 
-\item{parallel}{if set to TRUE, a parallelized code is use for standard error computation (if se=TRUE)}
+\item{ncores}{number of cores used for computing bootstrap standard errors (if required)}
 }
 \value{
-Return an object of \code{\link{class}} \code{search_lqmix}. This is a list containing the following elements:
+Return an object of \code{class} \code{search_lqmix}. This is a list containing the following elements:
 \item{optimal}{the identified optimal model}
-\item{allmodels}{the output of each estimated model}
-\item{lkv}{the vector of likelihood values for each estimated model}
-\item{aicv}{the vector of AIC values for each estimated model}
-\item{bicv}{the vector of BIC values for each estimated model}
+\item{allmodels}{the output of each estimated model in the form of a list of lists; the former and the latter list are associated with TC and TV random coefficients, respectively}
+\item{lkv}{the vector of likelihood values for each fitted model}
+\item{aicv}{the vector of AIC values for each fitted model}
+\item{bicv}{the vector of BIC values for each fitted model}
 \item{qtl}{the estimated quantile}
 \item{mv}{the vector of possible number of states associated to TV random coefficients (if present)}
 \item{Gv}{the vector of possible number of mixture components associated to TC random coefficients (if present)}
@@ -62,16 +62,18 @@ Return an object of \code{\link{class}} \code{search_lqmix}. This is a list cont
 \item{call}{the matched call}
 }
 \description{
-Search the global maximum of the log-likelihood function for a finite mixture of linear quantile regression models with TC and/or TV, discrete, random coefficients, for varying number of components and/or states
+Search the global maximum of the log-likelihood function for a finite mixture of linear quantile regression models with TC and/or TV, discrete, random coefficients, for varying number of components and/or states.
 }
 \details{
 The function allows to identify the optimal model specification in terms of number of mixture components and/or hidden states associated to
 TC and/or TV random coefficients, respectively.
 This is done by considering a multi-start strategy based on both deterministic and random starting points.
-The number or random tries is proportional to the number of mixture components and/or hidden states associated to the random coefficients in the model.
+The number or random starts is proportional to the number of mixture components and/or hidden states associated to the random coefficients in the model.
+For models based on TC random coefficients, \code{nran x (G-1)} random starts are considered;
+for models based on TV or TC and TV random coefficients, the number of random start is set to \code{nran x (m-1)} and \code{nran x (G-1) x (m-1)}, respectively.
 
-If \code{method="lk"}, the optimal model selected by the function is that providing the highest log-likelihood value;
-if \code{method="AIC"}, (\code{method="BIC"}, respectively), the optimal model selected by the function is that providing the lowest AIC (BIC, respectively) value.
+If \code{method = "lk"}, the optimal model selected by the function is that providing the highest log-likelihood value;
+if \code{method = "AIC"}, (\code{method = "BIC"}, respectively), the optimal model selected by the function is that providing the lowest AIC (BIC, respectively) value.
 
 If \code{se=TRUE}, standard errors based on a block bootstrap procedure are computed for the identified optimal model.
 }

@@ -2,18 +2,18 @@
 % Please edit documentation in R/logLik.lqmix.R
 \name{logLik.lqmix}
 \alias{logLik.lqmix}
-\title{Print the log-likelihood of an \code{lqmix} object}
+\title{Print the log-likelihood of an \code{{lqmix}} object}
 \usage{
 \method{logLik}{lqmix}(object, ...)
 }
 \arguments{
-\item{object}{an \code{lqmix} object}
+\item{object}{an \code{{lqmix}} object}
 
 \item{\dots}{not used}
 }
 \value{
-Return an object of \code{\link{class}} \code{logLik} providing the log-likelihood value at convergence of the EM algorithm for a fitted model of \code{\link{class}} \code{lqmix}
+Return an object of \code{\link{class}} \code{logLik} providing the log-likelihood value at convergence of the EM algorithm for a fitted model of \code{\link{class}} \code{\link{lqmix}}.
 }
 \description{
-Print the log-likelihood of a fitted model of \code{\link{class}} \code{lqmix}
+Print the log-likelihood of a fitted model of \code{\link{class}} \code{\link{lqmix}}.
 }
